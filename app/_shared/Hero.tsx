@@ -3,69 +3,71 @@
 import React, { useEffect, useState } from "react";
 import { FaPaperPlane } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
-import {templates} from "../../data/constant";
-import {useAuth,useUser} from '@clerk/nextjs'
-import {useRouter} from 'next/navigation';
-import {randomUUID} from "crypto";
+import { templates } from "../../data/constant";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Loader } from "lucide-react";
+
 const PRIMARY = "oklch(0.3871 0.1796 289.69)";
 
 export default function Hero() {
+  const [userInput, setUserInput] = useState<string>("");
+  const [device, setDevice] = useState<string>("website");
+  const [loading, setLoading] = useState(false);
 
-const [userInput,setUserInput]=useState<string>()
-const [device, setDevice] = useState<string>("website");
+  const { user } = useUser();
+  const router = useRouter();
 
-const {user}=useUser();
-// const {}=useAuth();
-const router=useRouter();
-const [loading,setloading]=useState(false);
-
-const onCreateProject=async()=>{
-    if(!user)
-    {
-        router.push('/sign-in');
-        return;
+  const onCreateProject = async () => {
+    if (!user) {
+      router.push("/sign-in");
+      return;
     }
-    //Create New Project
-    if(!userInput)
-    {
-        return;
+
+    if (!userInput?.trim()) return;
+
+    try {
+      setLoading(true);
+
+      const { data } = await axios.post("/api/project", {
+        userInput,
+        device,
+      });
+
+      // 👇 Take projectId from backend response
+      const projectId = data.projectId;
+
+      if (!projectId) {
+        throw new Error("Project ID not returned from backend");
+      }
+
+      router.push(`/project/${projectId}`);
+    } catch (error) {
+      console.error("Project creation failed:", error);
+    } finally {
+      setLoading(false);
     }
-    setloading(true);
-    // const projectId=randomUUID();
-    const result=await axios.post('/api/project',{
-        userInput:userInput,
-        device:device,
-        // projectId:projectId
-    })
-    console.log(result.data);
-    setloading(false);
-}
-
-
-
-
+  };
 
   const [mounted, setMounted] = useState(false);
-  const [particles, setParticles] = useState([]);
+  const [particles, setParticles] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
 
-    // generate particles only on client
     const generated = Array.from({ length: 25 }).map(() => ({
       left: Math.random() * 100,
       top: Math.random() * 100,
       size: Math.random() * 6 + 4,
       duration: Math.random() * 10 + 10,
     }));
+
     setParticles(generated);
   }, []);
 
   return (
     <section className="relative w-full py-24 px-6 overflow-hidden">
-
       {/* Background Gradient */}
       <div className="absolute inset-0 -z-20 bg-gradient-to-br from-white via-purple-100 to-blue-100" />
 
@@ -87,7 +89,6 @@ const onCreateProject=async()=>{
       </div>
 
       <div className="max-w-6xl mx-auto text-center">
-
         {/* Badge */}
         <div
           className={`inline-flex items-center gap-2 px-5 py-2 rounded-full border bg-white/70 backdrop-blur shadow-md mb-8 transition-all duration-700
@@ -132,61 +133,58 @@ const onCreateProject=async()=>{
             placeholder="Enter what design you want to create"
             className="w-full resize-none outline-none text-lg p-3 rounded-lg"
             rows={3}
-        value={userInput}
-         onChange={(event)=>setUserInput(event.target?.value)} />
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+          />
 
           <div className="flex items-center justify-between mt-3">
             <select
-  className="px-4 py-2 rounded-lg border bg-gray-50 text-gray-700"
-  value={device}
-  onChange={(e) => setDevice(e.target.value)}
->
-  <option value="mobile">Mobile</option>
-  <option value="website">Website</option>
-</select>
+              className="px-4 py-2 rounded-lg border bg-gray-50 text-gray-700"
+              value={device}
+              onChange={(e) => setDevice(e.target.value)}
+            >
+              <option value="mobile">Mobile</option>
+              <option value="website">Website</option>
+            </select>
 
-
-         <button
-  className="p-3 rounded-xl text-white transition hover:scale-110 active:scale-95 disabled:opacity-50"
-  style={{ background: PRIMARY }}
-  onClick={onCreateProject}
-  disabled={loading}
->
-  {loading ? (
-    <Loader className="animate-spin" />
-  ) : (
-    <FaPaperPlane />
-  )}
-</button>
-
+            <button
+              className="p-3 rounded-xl text-white transition hover:scale-110 active:scale-95 disabled:opacity-50"
+              style={{ background: PRIMARY }}
+              onClick={onCreateProject}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader className="animate-spin" />
+              ) : (
+                <FaPaperPlane />
+              )}
+            </button>
           </div>
         </div>
 
         {/* Tags */}
-     <div
-  className={`flex flex-wrap justify-center gap-4 mt-14 transition-all duration-700 delay-500
-  ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
->
-  {templates.map((item, i) => {
-    const Icon = item.icon;
+        <div
+          className={`flex flex-wrap justify-center gap-4 mt-14 transition-all duration-700 delay-500
+          ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+        >
+          {templates.map((item, i) => {
+            const Icon = item.icon;
 
-    return (
-      <div
-        key={i}
-        onClick={() => setUserInput(item.description)}
-        className="flex items-center gap-2 px-6 py-3 rounded-2xl border bg-white/80 backdrop-blur shadow-sm text-gray-700 text-sm md:text-base font-medium transition hover:shadow-lg hover:-translate-y-1 hover:scale-[1.03] hover:ring-2 cursor-pointer"
-        style={{ "--tw-ring-color": PRIMARY }}
-      >
-        <Icon style={{ color: PRIMARY }} />
-        {item.title}
+            return (
+              <div
+                key={i}
+                onClick={() => setUserInput(item.description)}
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl border bg-white/80 backdrop-blur shadow-sm text-gray-700 text-sm md:text-base font-medium transition hover:shadow-lg hover:-translate-y-1 hover:scale-[1.03] hover:ring-2 cursor-pointer"
+                style={{ "--tw-ring-color": PRIMARY } as React.CSSProperties}
+              >
+                <Icon style={{ color: PRIMARY }} />
+                {item.title}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    );
-  })}
-</div>
 
-      </div>
-
-      {/* Particle Animation */}
       <style jsx>{`
         @keyframes float {
           0% { transform: translateY(0px); }
