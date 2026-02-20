@@ -1,7 +1,7 @@
 import { db } from "@/config/db";
-import { usersTable } from "@/config/schema";
+import { ProjectTable, usersTable } from "@/config/schema";
 import { currentUser } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { eq ,and} from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -64,6 +64,11 @@ export async function POST(req: NextRequest) {
     }, { status: 500 });
   }
 }
+
+
+
+
+
 
    
 
