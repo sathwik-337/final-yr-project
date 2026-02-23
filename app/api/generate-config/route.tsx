@@ -4,11 +4,53 @@ import { db } from "@/config/db";
 import { ScreenConfig } from "@/config/schema";
 import { NextRequest, NextResponse } from "next/server";
 
+/* =========================================================
+   ✅ SAFE JSON PARSER (AI OUTPUT PROTECTION)
+========================================================= */
+
+function safeParseJSON(text: string) {
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    console.warn("⚠️ First JSON parse failed. Attempting cleanup...");
+
+    let repaired = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+      .replace(/[\u0000-\u001F]+/g, "")
+      .trim();
+
+    try {
+      return JSON.parse(repaired);
+    } catch (err2) {
+      console.error("❌ JSON STILL INVALID:\n", repaired);
+      throw new Error("AI returned invalid JSON");
+    }
+  }
+}
+
+/* =========================================================
+   ✅ ROUTE HANDLER
+========================================================= */
+
 export async function POST(req: NextRequest) {
   try {
-    const { userInput, deviceType, projectId } = await req.json();
+    const body = await req.json();
 
-    /* ---------------- AI REQUEST ---------------- */
+    const { userInput, deviceType, projectId } = body;
+
+    /* ---------- VALIDATION ---------- */
+
+    if (!projectId || !deviceType || !userInput) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    /* ---------- AI REQUEST ---------- */
 
     const aiResult = await openrouter.chat.send({
       chatGenerationParams: {
@@ -16,8 +58,6 @@ export async function POST(req: NextRequest) {
         stream: false,
         maxTokens: 2000,
         temperature: 0.6,
-
-        // ⭐ forces JSON response
         responseFormat: { type: "json_object" },
 
         messages: [
@@ -27,7 +67,14 @@ export async function POST(req: NextRequest) {
               APP_LAYOUT_CONFIG_PROMPT.replace(
                 "{deviceType}",
                 deviceType
-              ) + "\nReturn ONLY valid JSON.",
+              ) +
+              `
+CRITICAL OUTPUT RULES:
+- Output STRICT VALID JSON
+- No markdown or backticks
+- Escape quotes using \\" inside strings
+- JSON must pass JSON.parse()
+`,
           },
           {
             role: "user",
@@ -37,66 +84,38 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("AI RESULT:", aiResult);
+    console.log("✅ AI RESPONSE RECEIVED");
 
-    /* ---------------- EXTRACT TEXT ---------------- */
+    /* ---------- EXTRACT TEXT ---------- */
 
     const choice = aiResult?.choices?.[0];
     const content = choice?.message?.content ?? "";
 
-    let text =
+    const text =
       typeof content === "string"
         ? content
-        : content?.[0]?.text ?? "";
+        : (content as any)?.[0]?.text ?? "";
 
-    /* ---------------- CLEAN RESPONSE ---------------- */
-
-    let cleanedText = text
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .replace(/[“”]/g, '"') // smart quotes
-      .replace(/[‘’]/g, "'")
-      .replace(/[\u0000-\u001F]+/g, "")
-      .trim();
-
-    /* ---------------- FIX UNESCAPED QUOTES ---------------- */
-    // Fix strings like: "labelled "Start organizing" plus"
-    cleanedText = cleanedText.replace(
-      /(:\s*")(.*?)(?=",\s*("|[a-zA-Z0-9_]+")\s*:)/gs,
-      (_, start, value) => {
-        const escaped = value.replace(/"/g, '\\"');
-        return `${start}${escaped}`;
-      }
-    );
-
-    /* ---------------- PARSE JSON ---------------- */
-
-    let jsonData;
-
-    try {
-      jsonData = JSON.parse(cleanedText);
-    } catch (e) {
-      console.error("❌ Invalid JSON:", cleanedText);
-
-      return NextResponse.json(
-        {
-          error: "Invalid JSON returned from AI",
-          raw: cleanedText,
-        },
-        { status: 500 }
-      );
+    if (!text) {
+      throw new Error("Empty AI response");
     }
 
-    /* ---------------- INSERT INTO DB ---------------- */
+    /* ---------- SAFE JSON PARSE ---------- */
+
+    const jsonData = safeParseJSON(text);
+
+    /* ---------- VALIDATE SCREENS ---------- */
 
     const screens = jsonData?.screens ?? [];
 
-    if (!screens.length) {
+    if (!Array.isArray(screens) || screens.length === 0) {
       return NextResponse.json(
         { error: "No screens generated" },
         { status: 400 }
       );
     }
+
+    /* ---------- PREPARE DB INSERT ---------- */
 
     const insertData = screens.map((screen: any) => ({
       projectId: projectId,
@@ -107,11 +126,13 @@ export async function POST(req: NextRequest) {
       code: "",
     }));
 
+    /* ---------- INSERT INTO DATABASE ---------- */
+
     await db.insert(ScreenConfig).values(insertData);
 
-    console.log("✅ Screens inserted:", insertData.length);
+    console.log(`✅ Screens inserted: ${insertData.length}`);
 
-    /* ---------------- RESPONSE ---------------- */
+    /* ---------- RESPONSE ---------- */
 
     return NextResponse.json({
       success: true,
@@ -124,7 +145,13 @@ export async function POST(req: NextRequest) {
     console.error("🔥 GENERATE CONFIG ERROR:", error);
 
     return NextResponse.json(
-      { error: "Generation failed" },
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Generation failed",
+      },
       { status: 500 }
     );
   }

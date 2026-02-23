@@ -17,8 +17,6 @@ function ProjectCanvasPlayground() {
 
   const [loading, setLoading] = useState(true);
   const [loadingMsg, setLoadingMsg] = useState('Loading project...');
-
-  // ⭐ NEW STATE (important)
   const [isGenerating, setIsGenerating] = useState(false);
 
   /* ---------- params ---------- */
@@ -51,41 +49,87 @@ function ProjectCanvasPlayground() {
   /* ---------- GENERATE CONFIG ---------- */
 
   const generateScreenConfig = async () => {
+    setIsGenerating(true);
+    setLoading(true);
+    setLoadingMsg("Generating Screen Configurations...");
+
     try {
-      // ✅ FORCE LOADER FIRST
-      setIsGenerating(true);
-      setLoading(true);
-      setLoadingMsg("Generating Screen Configurations...");
-
-      // allow React paint before API call
-      await new Promise(r => setTimeout(r, 50));
-
       const result = await axios.post('/api/generate-config', {
         projectId,
         deviceType: projectDetails?.device,
         userInput: projectDetails?.userInput
       });
 
-      console.log("Generated:", result.data);
+      const screens = result.data?.screens ?? [];
+      setScreenConfig(screens);
 
-      setScreenConfig(result.data?.screens ?? []);
+      return screens; // ⭐ important
 
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsGenerating(false);
-      setLoading(false);
+      return [];
     }
+  };
+
+  /* ---------- GENERATE UIUX ---------- */
+
+  const GenerateScreenUIUX = async (screens: ScreenConfig[]) => {
+
+    setLoading(true);
+
+    for (let index = 0; index < screens.length; index++) {
+
+      const screen = screens[index];
+
+      // skip already generated
+      if (screen?.code) continue;
+
+      setLoadingMsg(`Generating Screen ${index + 1}`);
+
+      try {
+        const result = await axios.post('/api/generate-screen-ui', {
+          projectId,
+          screenId: screen?.screenId,
+          screenName: screen?.screenName,
+          purpose: screen?.purpose,
+          screenDescription: screen?.screenDescription
+        });
+
+        console.log(result.data);
+
+        // ✅ update UI instantly
+        setScreenConfig(prev =>
+          prev.map(s =>
+            s.screenId === screen.screenId
+              ? result.data.data[0]
+              : s
+          )
+        );
+
+      } catch (err) {
+        console.error("Screen generation failed:", err);
+      }
+    }
+
+    setLoading(false);
+    setIsGenerating(false);
   };
 
   /* ---------- AUTO GENERATE ---------- */
 
   useEffect(() => {
-    if (!projectDetails) return;
-    if (screenConfig.length > 0) return;
-    if (isGenerating) return;
+    const runGeneration = async () => {
 
-    generateScreenConfig();
+      if (!projectDetails) return;
+      if (screenConfig.length > 0) return;
+      if (isGenerating) return;
+
+      const screens = await generateScreenConfig();
+      await GenerateScreenUIUX(screens);
+    };
+
+    runGeneration();
+
   }, [projectDetails]);
 
   /* ---------- INITIAL FETCH ---------- */
