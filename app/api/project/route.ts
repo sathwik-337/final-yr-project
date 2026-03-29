@@ -102,6 +102,49 @@ return NextResponse.json({
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const { theme, projectName } = await req.json();
+    const projectId = req.nextUrl.searchParams.get("projectId");
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: "ProjectId is required" },
+        { status: 400 }
+      );
+    }
+
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Build update object
+    const updateData: any = {};
+    if (theme) updateData.theme = theme;
+    if (projectName) updateData.projectName = projectName;
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "No data provided to update" }, { status: 400 });
+    }
+
+    await db
+      .update(ProjectTable)
+      .set(updateData)
+      .where(
+        and(
+          eq(ProjectTable.projectId, projectId),
+          eq(ProjectTable.userId, user.primaryEmailAddress?.emailAddress as string)
+        )
+      );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Project update error:", error);
+    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+  }
+}
+
 
 
 

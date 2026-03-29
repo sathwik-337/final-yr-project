@@ -1,282 +1,130 @@
 export const THEMES = {
-  /* ================= AURORA INK ================= */
-  AURORA_INK: {
-    background: "#0b1020",
-    foreground: "#f4f6ff",
-
-    card: "#121a33",
-    cardForeground: "#f4f6ff",
-
-    popover: "#121a33",
-    popoverForeground: "#f4f6ff",
-
-    primary: "#7c5cff",
-    primaryRgb: "124, 92, 255",
-    primaryForeground: "#0b1020",
-
-    secondary: "#1a2547",
-    secondaryForeground: "#e8ebff",
-
-    muted: "#141d3a",
-    mutedForeground: "#a9b2d6",
-
-    accent: "#2fe6c7",
-    accentForeground: "#0b1020",
-
-    destructive: "#ff4d6d",
-
-    border: "#202c56",
-    input: "#202c56",
-    ring: "#7c5cff",
-    radius: "0.9rem",
-
-    chart: ["#7c5cff", "#2fe6c7", "#ffb84d", "#ff4d6d", "#66a6ff"],
-  },
-
-  /* ================= DUSTY ORCHID ================= */
-  DUSTY_ORCHID: {
-    background: "#fbf7fb",
-    foreground: "#221827",
-
-    card: "#ffffff",
-    cardForeground: "#221827",
-
-    popover: "#ffffff",
-    popoverForeground: "#221827",
-
-    primary: "#b24c7c",
-    primaryRgb: "178, 76, 124",
-    primaryForeground: "#ffffff",
-
-    secondary: "#f1e6f0",
-    secondaryForeground: "#221827",
-
-    muted: "#efe2ed",
-    mutedForeground: "#6b5871",
-
-    accent: "#3aa6a6",
-    accentForeground: "#0f172a",
-
-    destructive: "#e23a53",
-
-    border: "#e4d6e2",
-    input: "#ffffff",
-    ring: "#b24c7c",
-    radius: "0.75rem",
-
-    chart: ["#b24c7c", "#3aa6a6", "#f0a24f", "#6a4fb3", "#2f6fdf"],
-  },
-
-  /* ================= CITRUS SLATE ================= */
-  CITRUS_SLATE: {
-    background: "#0f141a",
-    foreground: "#f5f7fb",
-
-    card: "#151c24",
-    cardForeground: "#f5f7fb",
-
-    popover: "#151c24",
-    popoverForeground: "#f5f7fb",
-
-    primary: "#ff7a2f",
-    primaryRgb: "255, 122, 47",
-    primaryForeground: "#0f141a",
-
-    secondary: "#1f2a36",
-    secondaryForeground: "#f5f7fb",
-
-    muted: "#18212c",
-    mutedForeground: "#aab5c3",
-
-    accent: "#7dd3ff",
-    accentForeground: "#0f141a",
-
-    destructive: "#ff3b5c",
-
-    border: "#2a394a",
-    input: "#2a394a",
-    ring: "#ff7a2f",
-    radius: "0.6rem",
-
-    chart: ["#ff7a2f", "#7dd3ff", "#9bff8b", "#c28bff", "#ffd36a"],
-  },
-
-  /* ================= MOSS PARCHMENT ================= */
-  MOSS_PARCHMENT: {
-    background: "#f7f5ef",
-    foreground: "#1d261f",
-
-    card: "#ffffff",
-    cardForeground: "#1d261f",
-
-    popover: "#ffffff",
-    popoverForeground: "#1d261f",
-
-    primary: "#2f7d4a",
-    primaryRgb: "47, 125, 74",
-    primaryForeground: "#ffffff",
-
-    secondary: "#e7efe5",
-    secondaryForeground: "#1d261f",
-
-    muted: "#e3eadf",
-    mutedForeground: "#5f6f63",
-
-    accent: "#b26d2d",
-    accentForeground: "#ffffff",
-
-    destructive: "#d94444",
-
-    border: "#d6e0d4",
-    input: "#ffffff",
-    ring: "#2f7d4a",
-    radius: "1rem",
-
-    chart: ["#2f7d4a", "#b26d2d", "#2b6cb0", "#8a4fff", "#d94444"],
-  },
-
-  /* ================= POLAR MINT ================= */
-  POLAR_MINT: {
-    background: "#f2fbff",
-    foreground: "#0d1b2a",
-
-    card: "#ffffff",
-    cardForeground: "#0d1b2a",
-
-    popover: "#ffffff",
-    popoverForeground: "#0d1b2a",
-
-    primary: "#00a6a6",
-    primaryRgb: "0, 166, 166",
-    primaryForeground: "#ffffff",
-
-    secondary: "#e3f6f8",
-    secondaryForeground: "#0d1b2a",
-
-    muted: "#d7f0f4",
-    mutedForeground: "#3e6470",
-
-    accent: "#5b7cfa",
-    accentForeground: "#ffffff",
-
-    destructive: "#ff4b4b",
-
-    border: "#cfe6ee",
-    input: "#ffffff",
-    ring: "#00a6a6",
-    radius: "0.85rem",
-
-    chart: ["#00a6a6", "#5b7cfa", "#ffb020", "#ff4b4b", "#7a52cc"],
-  },
-
-  /* ================= OBSIDIAN BLOOM ================= */
-  OBSIDIAN_BLOOM: {
-    background: "#0a0a0d",
-    foreground: "#f7f7fb",
-
-    card: "#14141a",
-    cardForeground: "#f7f7fb",
-
-    popover: "#14141a",
-    popoverForeground: "#f7f7fb",
-
-    primary: "#ff4fd8",
-    primaryRgb: "255, 79, 216",
-    primaryForeground: "#0a0a0d",
-
-    secondary: "#1c1c25",
-    secondaryForeground: "#f7f7fb",
-
-    muted: "#171720",
-    mutedForeground: "#a8a8b8",
-
-    accent: "#6dffb2",
-    accentForeground: "#0a0a0d",
-
-    destructive: "#ff3d5a",
-
-    border: "#2a2a37",
-    input: "#2a2a37",
-    ring: "#ff4fd8",
-    radius: "0.7rem",
-
-    chart: ["#ff4fd8", "#6dffb2", "#5cc8ff", "#ffb84d", "#b18cff"],
-  },
-
-  /* ================= NETFLIX ================= */
+  /* ================= NETFLIX (Cinematic Dark) ================= */
   NETFLIX: {
-    background: "#141414",
+    background: "#000000",
     foreground: "#ffffff",
-
-    card: "#1f1f1f",
+    card: "#141414",
     cardForeground: "#ffffff",
-
-    popover: "#1f1f1f",
+    popover: "#141414",
     popoverForeground: "#ffffff",
-
-    primary: "#e50914",
+    primary: "#E50914", // Netflix Red
     primaryRgb: "229, 9, 20",
     primaryForeground: "#ffffff",
-
-    secondary: "#2a2a2a",
+    secondary: "#222222",
     secondaryForeground: "#ffffff",
-
-    muted: "#1a1a1a",
-    mutedForeground: "#b3b3b3",
-
-    accent: "#b81d24",
+    muted: "#222222",
+    mutedForeground: "#808080",
+    accent: "#E50914",
     accentForeground: "#ffffff",
-
-    destructive: "#ff3b30",
-
-    border: "#2f2f2f",
-    input: "#2f2f2f",
-    ring: "#e50914",
+    destructive: "#b91c1c",
+    border: "#333333",
+    input: "#333333",
+    ring: "#E50914",
     radius: "0.5rem",
-
-    chart: ["#e50914", "#ff6b6b", "#ff9f43", "#ffffff", "#b3b3b3"],
+    chart: ["#E50914", "#ffffff", "#444444", "#808080", "#222222"],
   },
 
-  /* ================= SPOTIFY ================= */
+  /* ================= SPOTIFY (Music Dark) ================= */
   SPOTIFY: {
     background: "#121212",
     foreground: "#ffffff",
-
     card: "#181818",
     cardForeground: "#ffffff",
-
     popover: "#181818",
     popoverForeground: "#ffffff",
-
-    primary: "#1db954",
+    primary: "#1DB954", // Spotify Green
     primaryRgb: "29, 185, 84",
     primaryForeground: "#000000",
-
-    secondary: "#242424",
+    secondary: "#282828",
     secondaryForeground: "#ffffff",
-
-    muted: "#1a1a1a",
+    muted: "#282828",
     mutedForeground: "#b3b3b3",
-
-    accent: "#1ed760",
+    accent: "#1DB954",
     accentForeground: "#000000",
+    destructive: "#e11d48",
+    border: "#333333",
+    input: "#333333",
+    ring: "#1DB954",
+    radius: "0.75rem",
+    chart: ["#1DB954", "#ffffff", "#535353", "#b3b3b3", "#282828"],
+  },
 
-    destructive: "#ff4b4b",
+  /* ================= CYBERPUNK (Neon Night) ================= */
+  CYBERPUNK: {
+    background: "#050505",
+    foreground: "#ffffff",
+    card: "#0f0f14",
+    cardForeground: "#ffffff",
+    popover: "#0f0f14",
+    popoverForeground: "#ffffff",
+    primary: "#f0f", // Neon Magenta
+    primaryRgb: "255, 0, 255",
+    primaryForeground: "#ffffff",
+    secondary: "#1c1c25",
+    secondaryForeground: "#ffffff",
+    muted: "#171720",
+    mutedForeground: "#0ff", // Neon Cyan
+    accent: "#0ff",
+    accentForeground: "#000000",
+    destructive: "#ff3d5a",
+    border: "#2a2a37",
+    input: "#2a394a",
+    ring: "#f0f",
+    radius: "0.25rem",
+    chart: ["#f0f", "#0ff", "#ffff00", "#ff00aa", "#00ff00"],
+  },
 
-    border: "#2a2a2a",
-    input: "#2a2a2a",
-    ring: "#1db954",
-    radius: "999px",
+  /* ================= OCEAN_BREEZE (Calm Blue) ================= */
+  OCEAN_BREEZE: {
+    background: "#f0f9ff", // Light blue tint
+    foreground: "#0c4a6e", // Sky 900
+    card: "#ffffff",
+    cardForeground: "#0c4a6e",
+    popover: "#ffffff",
+    popoverForeground: "#0c4a6e",
+    primary: "#0284c7", // Sky 600
+    primaryRgb: "2, 132, 199",
+    primaryForeground: "#ffffff",
+    secondary: "#e0f2fe", // Sky 100
+    secondaryForeground: "#0369a1",
+    muted: "#f0f9ff",
+    mutedForeground: "#7dd3fc",
+    accent: "#0ea5e9",
+    accentForeground: "#ffffff",
+    destructive: "#e11d48",
+    border: "#bae6fd",
+    input: "#bae6fd",
+    ring: "#0284c7",
+    radius: "1rem",
+    chart: ["#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc", "#bae6fd"],
+  },
 
-    chart: ["#1db954", "#1ed760", "#535353", "#ffffff", "#b3b3b3"],
+  /* ================= ROSE_GOLD (Elegant) ================= */
+  ROSE_GOLD: {
+    background: "#fffafb",
+    foreground: "#431407", // Warm Brown
+    card: "#ffffff",
+    cardForeground: "#431407",
+    popover: "#ffffff",
+    popoverForeground: "#431407",
+    primary: "#e11d48", // Rose 600
+    primaryRgb: "225, 29, 72",
+    primaryForeground: "#ffffff",
+    secondary: "#fff1f2", // Rose 50
+    secondaryForeground: "#9f1239",
+    muted: "#fff1f2",
+    mutedForeground: "#fda4af",
+    accent: "#fb7185",
+    accentForeground: "#ffffff",
+    destructive: "#be123c",
+    border: "#fecdd3",
+    input: "#fecdd3",
+    ring: "#e11d48",
+    radius: "1.5rem",
+    chart: ["#e11d48", "#fb7185", "#fda4af", "#fecdd3", "#fff1f2"],
   },
 } as const;
 
-/* ================= UTIL TYPES ================= */
-
-export const THEME_NAME_LIST = Object.keys(
-  THEMES
-) as (keyof typeof THEMES)[];
-
 export type ThemeKey = keyof typeof THEMES;
+export const THEME_NAME_LIST = Object.keys(THEMES) as ThemeKey[];
 export type Theme = (typeof THEMES)[ThemeKey];

@@ -1,10 +1,12 @@
 "use client"
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios';
 import { useUser } from "@clerk/nextjs";
+import { UserDetailContext } from '@/context/UserDetailContext';
 
 function Provider({ children }: any) {
   const { isLoaded, isSignedIn } = useUser();
+  const [userDetail, setUserDetail] = useState<any>(null);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -14,10 +16,12 @@ function Provider({ children }: any) {
 
   const CreateNewUser = async () => {
     const result = await axios.post('/api/user', {});
-    console.log(result.data);
+    setUserDetail(result.data.user);
   }
   return (
-    <div>{children}</div>
+    <UserDetailContext.Provider value={{ userDetail, setUserDetail }}>
+      <div>{children}</div>
+    </UserDetailContext.Provider>
   )
 }
 

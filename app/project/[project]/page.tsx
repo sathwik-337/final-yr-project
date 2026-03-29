@@ -1,23 +1,35 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import ProjectHeader from './_shared/ProjectHeader';
 import SettingsSection from './_shared/SettingsSection';
+import Canvas from './_shared/Canvas';
 import axios from 'axios';
 import { useParams } from 'next/navigation';
-import { ProjectType, ScreenConfig } from '@/type/types';
+import { ProjectType, ScreenConfig, ThemeKey } from '@/type/types';
 import { Loader2Icon } from 'lucide-react';
+import { UserDetailContext } from '@/context/UserDetailContext';
+import { toast } from 'sonner';
 
 function ProjectCanvasPlayground() {
 
   /* ---------- STATE ---------- */
 
+  const { userDetail, setUserDetail } = useContext(UserDetailContext);
   const [screenConfig, setScreenConfig] = useState<ScreenConfig[]>([]);
-  const [projectDetails, setProjectDetail] = useState<ProjectType>();
-
   const [loading, setLoading] = useState(true);
   const [loadingMsg, setLoadingMsg] = useState('Loading project...');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedScreenIndex, setSelectedScreenIndex] = useState(0);
+
+  const canvasRef = useRef<any>(null);
+
+  // selected theme
+  const [selectedTheme, setSelectedTheme] = useState<ThemeKey>("NETFLIX");
+
+  // project details
+  const [projectDetails, setProjectDetail] = useState<ProjectType>();
+  const [projectName, setProjectName] = useState<string>("PixPrompt Project");
 
   /* ---------- params ---------- */
 
@@ -35,9 +47,19 @@ function ProjectCanvasPlayground() {
         `/api/project?projectId=${projectId}`
       );
 
-      setProjectDetail(result?.data?.projectDetail);
+      const details = result?.data?.projectDetail;
+      setProjectDetail(details);
       setScreenConfig(result?.data?.screenConfig ?? []);
 
+      if (details?.projectName) {
+        setProjectName(details.projectName);
+      }
+
+      // 🚀 Initialize theme from database
+      if (details?.theme) {
+        setSelectedTheme(details.theme as ThemeKey);
+      }
+      
     } catch (error) {
       console.error(error);
       setLoadingMsg("Failed to load project");
@@ -46,9 +68,43 @@ function ProjectCanvasPlayground() {
     }
   };
 
-  /* ---------- GENERATE CONFIG ---------- */
+  /* ---------------- HANDLERS ---------------- */
 
-  const generateScreenConfig = async () => {
+  const handleThemeSelect = async (theme: ThemeKey) => {
+    setSelectedTheme(theme);
+    
+    // update theme in database
+    try {
+      await axios.patch(`/api/project?projectId=${projectId}`, {
+        theme
+      });
+      toast.success("Theme updated!");
+    } catch (error) {
+      console.error("Failed to save theme:", error);
+    }
+  };
+
+  const handleSaveProject = async (name: string = projectName) => {
+    try {
+      setLoading(true);
+      setLoadingMsg("Saving project...");
+      await axios.patch(`/api/project?projectId=${projectId}`, {
+        projectName: name,
+        theme: selectedTheme
+      });
+      
+      setProjectName(name);
+      setProjectDetail(prev => prev ? { ...prev, projectName: name } : prev);
+      toast.success("Project saved successfully!");
+    } catch (error) {
+      console.error("Failed to save project:", error);
+      toast.error("Failed to save project.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateScreenConfig = async (customPrompt?: string, customTheme?: ThemeKey) => {
     setIsGenerating(true);
     setLoading(true);
     setLoadingMsg("Generating Screen Configurations...");
@@ -57,17 +113,101 @@ function ProjectCanvasPlayground() {
       const result = await axios.post('/api/generate-config', {
         projectId,
         deviceType: projectDetails?.device,
-        userInput: projectDetails?.userInput
+        userInput: customPrompt || projectDetails?.userInput,
+        theme: customTheme || selectedTheme
       });
 
       const screens = result.data?.screens ?? [];
       setScreenConfig(screens);
+      
+      if (customTheme) {
+        setSelectedTheme(customTheme);
+      }
+
+      // update credits
+      setUserDetail((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          credits: Math.max(0, (prev.credits || 0) - 1)
+        };
+      });
 
       return screens; // ⭐ important
 
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error("Config generation failed:", error);
+      if (error?.response?.status === 403) {
+        toast.error("You don't have enough credits to generate this project.");
+      } else {
+        toast.error("Failed to generate project config. Please try again.");
+      }
       return [];
+    } finally {
+      setIsGenerating(false);
+      setLoading(false);
+    }
+  };
+
+  const handleManualGenerate = async (prompt: string) => {
+    // 1. If we have no screens, generate the full project config
+    if (screenConfig.length === 0) {
+      const screens = await generateScreenConfig(prompt, selectedTheme);
+      await GenerateScreenUIUX(screens);
+    } else {
+      // 2. If we have screens, modify the CURRENT selected screen
+      const currentScreen = screenConfig[selectedScreenIndex];
+      await handleEditScreenUI(currentScreen, prompt, selectedTheme);
+    }
+  };
+
+  const handleEditScreenUI = async (screen: ScreenConfig, prompt: string, theme: ThemeKey) => {
+    setIsGenerating(true);
+    setLoading(true);
+    setLoadingMsg(`Updating ${screen.screenName}...`);
+
+    try {
+      const result = await axios.post('/api/generate-screen-ui', {
+        projectId,
+        screenId: screen.screenId,
+        screenName: screen.screenName,
+        purpose: screen.purpose,
+        screenDescription: prompt, // Use the new prompt for editing
+        projectVisualDescription: `Theme: ${theme}, Style: Premium, Unique.`,
+        theme: theme,
+        existingCode: screen.code, // ⭐ Important: pass existing code for modification
+        deviceType: projectDetails?.device
+      });
+
+      // Update the UI
+      if (result.data?.data?.[0]) {
+        setScreenConfig(prev =>
+          prev.map(s =>
+            s.screenId === screen.screenId
+              ? result.data.data[0]
+              : s
+          )
+        );
+        toast.success("Screen updated successfully!");
+      } else {
+        throw new Error("Invalid response format from server");
+      }
+
+      // update credits
+      setUserDetail((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          credits: Math.max(0, (prev.credits || 0) - 1)
+        };
+      });
+
+    } catch (err: any) {
+      console.error("Screen update failed:", err);
+      toast.error("Failed to update screen.");
+    } finally {
+      setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -92,22 +232,42 @@ function ProjectCanvasPlayground() {
           screenId: screen?.screenId,
           screenName: screen?.screenName,
           purpose: screen?.purpose,
-          screenDescription: screen?.screenDescription
+          screenDescription: screen?.screenDescription,
+          projectVisualDescription: `Theme: ${selectedTheme || "AURORA_INK"}, Style: Premium, Unique, with high-quality illustrations.`,
+          theme: selectedTheme || "AURORA_INK",
+          deviceType: projectDetails?.device
         });
 
         console.log(result.data);
 
         // ✅ update UI instantly
-        setScreenConfig(prev =>
-          prev.map(s =>
-            s.screenId === screen.screenId
-              ? result.data.data[0]
-              : s
-          )
-        );
+        if (result.data?.data?.[0]) {
+          setScreenConfig(prev =>
+            prev.map(s =>
+              s.screenId === screen.screenId
+                ? result.data.data[0]
+                : s
+            )
+          );
+        } else {
+          console.error("Failed to update screen config: Invalid response format");
+        }
 
-      } catch (err) {
+        // update credits
+        setUserDetail((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            credits: Math.max(0, (prev.credits || 0) - 1)
+          };
+        });
+
+      } catch (err: any) {
         console.error("Screen generation failed:", err);
+        if (err?.response?.status === 403) {
+          toast.error("Credits exhausted during screen generation.");
+          break; // stop generating further screens
+        }
       }
     }
 
@@ -139,29 +299,41 @@ function ProjectCanvasPlayground() {
     GetProjectDetails();
   }, [projectId]);
 
-  /* ---------- UI ---------- */
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-background text-foreground space-y-4">
+        <Loader2Icon className="animate-spin text-primary" size={40} />
+        <p className="text-sm font-medium animate-pulse">{loadingMsg}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative">
+    <div className="h-screen flex flex-col bg-background">
+      <ProjectHeader 
+        projectName={projectName} 
+        onSave={() => handleSaveProject()} 
+      />
 
-      {(loading || isGenerating) && (
-        <div className="
-          absolute left-1/2 top-20 -translate-x-1/2
-          bg-blue-300/20 border border-blue-400
-          rounded-xl px-5 py-3 shadow-md backdrop-blur-md
-        ">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Loader2Icon className="animate-spin w-4 h-4" />
-            <span>{loadingMsg}</span>
-          </div>
-        </div>
-      )}
-
-      <ProjectHeader />
-
-      <div className="flex h-screen">
-        <SettingsSection />
-      </div>
+      <main className="flex flex-1 overflow-hidden">
+        <SettingsSection
+          onGenerate={handleManualGenerate}
+          onThemeSelect={handleThemeSelect}
+          onSave={handleSaveProject}
+          onScreenshot={() => canvasRef.current?.downloadImage()}
+          isGenerating={isGenerating}
+          selectedTheme={selectedTheme}
+          initialProjectName={projectName}
+        />
+        <Canvas
+          ref={canvasRef}
+          screens={screenConfig}
+          selectedScreenIndex={selectedScreenIndex}
+          onScreenSelect={setSelectedScreenIndex}
+          deviceType={projectDetails?.device}
+          selectedTheme={selectedTheme}
+        />
+      </main>
     </div>
   );
 }

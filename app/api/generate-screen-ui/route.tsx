@@ -1,25 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
-import { openrouter } from "@/config/openrouter";
+import { groq } from "@/config/groq";
+import { geminiModel } from "@/config/gemini"; // ⭐ Re-added for safety
+import { DEEPSEEK_CONFIG } from "@/config/deepseek"; // ⭐ Official DeepSeek
 import { GENERATION_SCREEN_PROMPT } from "@/data/Prompt";
 import { db } from "@/config/db";
-import { ScreenConfig } from "@/config/schema";
-import { and, eq } from "drizzle-orm";
+import { ScreenConfig, usersTable } from "@/config/schema";
+import { and, eq, sql } from "drizzle-orm";
+import { currentUser } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
+import { THEMES } from "@/data/Themes";
 
 /* =====================================================
    SAFE JSON PARSER (handles bad AI outputs)
 ===================================================== */
 function safeParseJSON(text: string) {
   try {
+    // 1. First attempt: direct parse
     return JSON.parse(text);
   } catch {
+    // 2. Second attempt: cleanup code blocks
     const cleaned = text
       .replace(/```json/g, "")
+      .replace(/```html/g, "")
       .replace(/```/g, "")
       .replace(/[“”]/g, '"')
       .replace(/[‘’]/g, "'")
       .trim();
 
-    return JSON.parse(cleaned);
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      // 3. Third attempt: try to extract JSON with regex if there's surrounding text
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          return JSON.parse(jsonMatch[0]);
+        } catch {
+          // If all JSON parsing fails, but we have text, return it as code
+          console.warn("Regex JSON match failed to parse. Returning raw text as code.");
+          return { code: text };
+        }
+      }
+      
+      console.error("❌ ALL JSON PARSE ATTEMPTS FAILED:\n", text);
+      throw new Error("AI returned invalid JSON structure");
+    }
   }
 }
 
@@ -35,6 +59,9 @@ export async function POST(req: NextRequest) {
       purpose,
       screenDescription,
       projectVisualDescription,
+      theme: themeKey,
+      existingCode,
+      deviceType,
     } = body;
 
     /* ---------- VALIDATION ---------- */
@@ -45,66 +72,167 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* ---------- USER & CREDIT CHECK ---------- */
+
+    const user = await currentUser();
+    const email = user?.primaryEmailAddress?.emailAddress;
+
+    if (!email) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const userData = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, email));
+
+    if (!userData || userData.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    if ((userData[0].credits ?? 0) <= 0) {
+      return NextResponse.json(
+        { success: false, error: "Insufficient credits" },
+        { status: 403 }
+      );
+    }
+
     /* ---------- BUILD PROMPT ---------- */
-    const userInput = `
+    let userInput = `
 Screen Name: ${screenName}
 Screen Purpose: ${purpose}
 Screen Description: ${screenDescription}
 Project Visual Style: ${projectVisualDescription ?? "modern UI"}
+Theme Context: ${themeKey ?? "AURORA_INK"}
+Device Context: ${deviceType ?? "Desktop"}
 `;
 
-    /* ---------- AI CALL ---------- */
-const aiResult = await openrouter.chat.send({
-  chatGenerationParams: {
-    model: "openai/gpt-5.1-codex-mini",
-    stream: false,
-    maxTokens: 2000,
-    temperature: 0.6,
-    responseFormat: { type: "json_object" },
-
-    messages: [
-      {
-        role: "system",
-        content:
-          GENERATION_SCREEN_PROMPT +
-          "\n\nIMPORTANT: Respond ONLY in valid JSON format.",
-      },
-      {
-        role: "user",
-        content: userInput,
-      },
-    ],
-  },
-});
-
-    console.log("✅ AI RESPONSE RECEIVED");
-
-    /* ---------- EXTRACT CONTENT SAFELY ---------- */
-
-    const content = aiResult?.choices?.[0]?.message?.content;
-
-    // OpenRouter may return string OR array
-    const text =
-      typeof content === "string"
-        ? content
-        : (content as any)?.[0]?.text ?? "";
-
-    if (!text) {
-      throw new Error("Empty AI response");
+    if (existingCode) {
+      userInput += `\n\nEXISTING CODE TO MODIFY:\n${existingCode}\n\nUSER REQUEST: ${screenDescription}`;
     }
+
+    /* ---------- AI CALL ---------- */
+
+    console.log("🚀 STARTING UI GENERATION FOR:", screenId);
+    console.log("DEBUG: DEEPSEEK_API_KEY exists:", !!DEEPSEEK_CONFIG.apiKey);
+    if (DEEPSEEK_CONFIG.apiKey) {
+        console.log("DEBUG: DEEPSEEK_API_KEY prefix:", DEEPSEEK_CONFIG.apiKey.substring(0, 5) + "...");
+    }
+
+    const systemPrompt =
+      GENERATION_SCREEN_PROMPT +
+      "\n\nIMPORTANT: Respond ONLY in valid JSON format. NO markdown code blocks (no ```json). The 'code' field must be a string containing the FULL HTML/Tailwind CSS code.";
+
+    let aiResult;
+    try {
+      // 🥇 PRIMARY: Official DeepSeek V3 (High Quality UI Expert)
+      console.log("🚀 PRIMARY: Official DeepSeek (deepseek-chat)");
+      if (DEEPSEEK_CONFIG.apiKey) {
+        const response = await fetch(`${DEEPSEEK_CONFIG.baseURL}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${DEEPSEEK_CONFIG.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: DEEPSEEK_CONFIG.model,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userInput },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("❌ DEEPSEEK API ERROR STATUS:", response.status);
+          console.error("❌ DEEPSEEK API ERROR BODY:", JSON.stringify(errorData, null, 2));
+          throw new Error(`DeepSeek API failed with status ${response.status}: ${JSON.stringify(errorData)}`);
+        }
+
+        const deepSeekData = await response.json();
+        
+        aiResult = deepSeekData.choices[0].message.content;
+      } else {
+        throw new Error("Missing DEEPSEEK_API_KEY");
+      }
+    } catch (deepSeekErr: any) {
+      console.warn("⚠️ OFFICIAL DEEPSEEK FAILED, FALLING BACK TO GROQ:", deepSeekErr?.message);
+
+      try {
+        // 🥈 SECONDARY: Groq Llama 3.3 70B (Fast Backup)
+        console.log("🚀 SECONDARY: Groq Llama 3.3 70B");
+        const chatCompletion = await groq.chat.completions.create({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userInput },
+          ],
+          model: "llama-3.3-70b-versatile",
+          response_format: { type: "json_object" },
+          temperature: 0.85,
+          max_tokens: 8192,
+        });
+        aiResult = chatCompletion.choices[0].message.content;
+      } catch (aiErr: any) {
+        console.warn("⚠️ GROQ FAILED, FALLING BACK TO GEMINI:", aiErr?.message);
+
+        // 🥉 TERTIARY: Gemini 1.5 Flash (Safety Net)
+        try {
+          console.log("🚀 TERTIARY: Gemini 1.5 Flash (UI Safety Net)");
+          const result = await geminiModel.generateContent({
+            contents: [
+              { role: "user", parts: [{ text: systemPrompt + "\n\n" + userInput }] }
+            ],
+            generationConfig: {
+              maxOutputTokens: 8192,
+              temperature: 0.8,
+              responseMimeType: "application/json",
+            },
+          });
+          aiResult = result.response.text();
+        } catch (geminiErr: any) {
+          console.error("❌ ALL AI ATTEMPTS FAILED (DeepSeek, Groq, & Gemini):", geminiErr);
+          throw new Error(`All providers failed. Last error: ${geminiErr.message}`);
+        }
+      }
+    }
+
+    if (!aiResult) {
+      throw new Error("AI returned an empty response");
+    }
+
+    console.log("✅ AI RESPONSE RECEIVED (length):", aiResult.length);
 
     /* ---------- PARSE AI OUTPUT ---------- */
 
     let parsed: any;
-
     try {
-      parsed = safeParseJSON(text);
+      parsed = safeParseJSON(aiResult);
     } catch {
       console.warn("AI returned non-JSON. Saving raw output.");
-      parsed = { code: text };
+      parsed = { code: aiResult };
     }
 
-    const code: string = parsed.code || text;
+    // ⭐ Better fallback logic: ensure we actually have code
+    let code: string = parsed.code || parsed.html || "";
+    
+    // If parsed.code exists but is null/empty, or if it doesn't exist at all
+    if (!code && typeof aiResult === 'string' && aiResult.length > 50) {
+        // If we have a long string but no 'code' field, the whole string might be the code
+        // Or it might be the JSON that we failed to extract from
+        code = aiResult;
+    }
+
+    if (!code) {
+        throw new Error("AI failed to generate any code in the response");
+    }
 
     /* ---------- DB UPDATE ---------- */
 
@@ -118,6 +246,15 @@ const aiResult = await openrouter.chat.send({
         )
       )
       .returning();
+
+    /* ---------- DEDUCT CREDIT ---------- */
+
+    await db
+      .update(usersTable)
+      .set({ credits: sql`${usersTable.credits} - 1` })
+      .where(eq(usersTable.email, email));
+
+    console.log(`✅ Credit deducted for user: ${email} (Screen UI)`);
 
     /* ---------- RESPONSE ---------- */
 
