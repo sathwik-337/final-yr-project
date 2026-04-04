@@ -6,6 +6,7 @@ import axios from "axios";
 import { Folder, ArrowRight, Clock, Monitor, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { ProjectType } from "@/type/types";
+import { getThemeLabel } from "@/data/Themes";
 
 export default function RecentProjects() {
   const { user } = useUser();
@@ -89,7 +90,7 @@ export default function RecentProjects() {
 
                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400/60">
-                    {project.theme || "Modern Slate"}
+                    {getThemeLabel(project.theme)}
                   </span>
                   <div className="p-2 bg-indigo-500/10 rounded-lg group-hover:bg-indigo-500 group-hover:text-white transition-all">
                     <ArrowRight className="w-4 h-4" />

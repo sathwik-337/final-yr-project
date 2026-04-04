@@ -16,8 +16,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "UI Generator",
-  description: "Generate High quality Frontend Code from Figma Designs",
+  title: "PixPrompt UI",
+  description: "Generate high-quality frontend code from prompts with PixPrompt UI.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

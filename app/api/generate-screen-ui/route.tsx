@@ -7,7 +7,7 @@ import { ScreenConfig, usersTable } from "@/config/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { THEMES } from "@/data/Themes";
+import { buildThemePrompt, resolveThemeKey } from "@/data/Themes";
 
 /* =====================================================
    SAFE JSON PARSER (handles bad AI outputs)
@@ -104,13 +104,22 @@ export async function POST(req: NextRequest) {
     }
 
     /* ---------- BUILD PROMPT ---------- */
+    const resolvedTheme = resolveThemeKey(themeKey);
+    const themePrompt = buildThemePrompt(resolvedTheme);
+
     let userInput = `
 Screen Name: ${screenName}
 Screen Purpose: ${purpose}
 Screen Description: ${screenDescription}
 Project Visual Style: ${projectVisualDescription ?? "modern UI"}
-Theme Context: ${themeKey ?? "AURORA_INK"}
+Theme Context:
+${themePrompt}
 Device Context: ${deviceType ?? "Desktop"}
+
+Theme Usage Rules:
+- Use semantic theme classes like bg-background, text-foreground, bg-card, text-card-foreground, bg-primary, text-primary-foreground, bg-secondary, text-secondary-foreground, border-border, text-muted-foreground, and ring-ring.
+- Avoid hardcoded utility colors such as indigo, purple, pink, blue, rose, emerald, zinc, slate, etc.
+- If you need custom gradients or glow effects, derive them from var(--primary), var(--accent), var(--secondary), and rgba(var(--primary-rgb), ...).
 `;
 
     if (existingCode) {

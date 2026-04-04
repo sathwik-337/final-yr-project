@@ -6,7 +6,8 @@ import SettingsSection from './_shared/SettingsSection';
 import Canvas from './_shared/Canvas';
 import axios from 'axios';
 import { useParams } from 'next/navigation';
-import { ProjectType, ScreenConfig, ThemeKey } from '@/type/types';
+import { ProjectType, ScreenConfig } from '@/type/types';
+import { buildThemeCssVariables, DEFAULT_THEME_KEY, resolveThemeKey, type ThemeKey } from '@/data/Themes';
 import { Loader2Icon } from 'lucide-react';
 import { UserDetailContext } from '@/context/UserDetailContext';
 import { toast } from 'sonner';
@@ -25,7 +26,7 @@ function ProjectCanvasPlayground() {
   const canvasRef = useRef<any>(null);
 
   // selected theme
-  const [selectedTheme, setSelectedTheme] = useState<ThemeKey>("NETFLIX");
+  const [selectedTheme, setSelectedTheme] = useState<ThemeKey>(DEFAULT_THEME_KEY);
 
   // project details
   const [projectDetails, setProjectDetail] = useState<ProjectType>();
@@ -57,7 +58,7 @@ function ProjectCanvasPlayground() {
 
       // 🚀 Initialize theme from database
       if (details?.theme) {
-        setSelectedTheme(details.theme as ThemeKey);
+        setSelectedTheme(resolveThemeKey(details.theme));
       }
       
     } catch (error) {
@@ -85,16 +86,19 @@ function ProjectCanvasPlayground() {
   };
 
   const handleSaveProject = async (name: string = projectName) => {
+    const trimmedName = name.trim();
+    const nextProjectName = trimmedName || "PixPrompt Project";
+
     try {
       setLoading(true);
       setLoadingMsg("Saving project...");
       await axios.patch(`/api/project?projectId=${projectId}`, {
-        projectName: name,
+        projectName: nextProjectName,
         theme: selectedTheme
       });
       
-      setProjectName(name);
-      setProjectDetail(prev => prev ? { ...prev, projectName: name } : prev);
+      setProjectName(nextProjectName);
+      setProjectDetail(prev => prev ? { ...prev, projectName: nextProjectName } : prev);
       toast.success("Project saved successfully!");
     } catch (error) {
       console.error("Failed to save project:", error);
@@ -233,8 +237,8 @@ function ProjectCanvasPlayground() {
           screenName: screen?.screenName,
           purpose: screen?.purpose,
           screenDescription: screen?.screenDescription,
-          projectVisualDescription: `Theme: ${selectedTheme || "AURORA_INK"}, Style: Premium, Unique, with high-quality illustrations.`,
-          theme: selectedTheme || "AURORA_INK",
+          projectVisualDescription: `Theme: ${selectedTheme || DEFAULT_THEME_KEY}, Style: Premium, Unique, with high-quality illustrations.`,
+          theme: selectedTheme || DEFAULT_THEME_KEY,
           deviceType: projectDetails?.device
         });
 
@@ -308,8 +312,10 @@ function ProjectCanvasPlayground() {
     );
   }
 
+  const projectThemeStyle = buildThemeCssVariables(selectedTheme);
+
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background" style={projectThemeStyle}>
       <ProjectHeader 
         projectName={projectName} 
         onSave={() => handleSaveProject()} 
@@ -320,10 +326,11 @@ function ProjectCanvasPlayground() {
           onGenerate={handleManualGenerate}
           onThemeSelect={handleThemeSelect}
           onSave={handleSaveProject}
+          onProjectNameChange={setProjectName}
           onScreenshot={() => canvasRef.current?.downloadImage()}
           isGenerating={isGenerating}
           selectedTheme={selectedTheme}
-          initialProjectName={projectName}
+          projectName={projectName}
         />
         <Canvas
           ref={canvasRef}

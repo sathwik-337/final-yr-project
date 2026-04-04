@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { ScreenConfig } from "@/type/types";
-import { Copy, Monitor, Smartphone, Code2, Eye, Sparkles, Maximize2, Download } from "lucide-react";
+import { Copy, Monitor, Smartphone, Code2, Eye, Sparkles, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { toPng } from "html-to-image";
 
-import { THEMES, ThemeKey } from "@/data/Themes";
+import { buildThemeCssVariables, DEFAULT_THEME_KEY, getThemeByKey, type ThemeKey } from "@/data/Themes";
 
 interface CanvasProps {
   screens: ScreenConfig[];
@@ -23,7 +23,7 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
     selectedScreenIndex,
     onScreenSelect,
     deviceType = "website",
-    selectedTheme = "NETFLIX",
+    selectedTheme = DEFAULT_THEME_KEY,
   } = props;
 
   const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
@@ -89,8 +89,8 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
     // Not JSON or parse failed, use raw code
   }
 
-  // Use the selected theme with a fallback to NETFLIX
-  const theme = (THEMES as any)[selectedTheme] || THEMES.NETFLIX;
+  // Use the selected theme with a canonical fallback
+  const theme = getThemeByKey(selectedTheme);
 
   // Simple HTML Formatter
   const formatHTML = (html: string) => {
@@ -122,35 +122,40 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
     return formatted.trim();
   };
 
+  const iframeCssVariables = Object.entries(buildThemeCssVariables(selectedTheme))
+    .map(([token, value]) => `      ${token}: ${value};`)
+    .join("\n");
+
   const themeStyle = `
-    @theme {
-      --color-background: ${theme.background};
-      --color-foreground: ${theme.foreground};
-      --color-primary: ${theme.primary};
-      --color-primary-rgb: ${theme.primaryRgb || "255, 255, 255"};
-      --color-primary-muted: ${theme.primary}26;
-      --color-primary-foreground: ${theme.primaryForeground || "#ffffff"};
-      --color-secondary: ${theme.secondary};
-      --color-secondary-foreground: ${theme.secondaryForeground || "#ffffff"};
-      --color-card: ${theme.card};
-      --color-card-foreground: ${theme.cardForeground};
-      --color-popover: ${theme.popover || theme.card};
-      --color-popover-foreground: ${theme.popoverForeground || theme.cardForeground};
-      --color-muted: ${theme.muted};
-      --color-muted-foreground: ${theme.mutedForeground};
-      --color-accent: ${theme.accent};
-      --color-accent-muted: ${theme.accent}26;
-      --color-accent-foreground: ${theme.accentForeground || "#000000"};
-      --color-destructive: ${theme.destructive || "#ef4444"};
-      --color-border: ${theme.border};
-      --color-input: ${theme.input || theme.border};
-      --color-ring: ${theme.ring || theme.primary};
-      --radius-sm: calc(${theme.radius} - 4px);
-      --radius-md: calc(${theme.radius} - 2px);
-      --radius-lg: ${theme.radius};
-      --radius-xl: calc(${theme.radius} + 4px);
-      --radius-2xl: calc(${theme.radius} + 8px);
-      --radius-3xl: calc(${theme.radius} + 12px);
+    :root {
+${iframeCssVariables}
+    }
+
+    @theme inline {
+      --color-background: var(--background);
+      --color-foreground: var(--foreground);
+      --color-card: var(--card);
+      --color-card-foreground: var(--card-foreground);
+      --color-popover: var(--popover);
+      --color-popover-foreground: var(--popover-foreground);
+      --color-primary: var(--primary);
+      --color-primary-foreground: var(--primary-foreground);
+      --color-secondary: var(--secondary);
+      --color-secondary-foreground: var(--secondary-foreground);
+      --color-muted: var(--muted);
+      --color-muted-foreground: var(--muted-foreground);
+      --color-accent: var(--accent);
+      --color-accent-foreground: var(--accent-foreground);
+      --color-destructive: var(--destructive);
+      --color-border: var(--border);
+      --color-input: var(--input);
+      --color-ring: var(--ring);
+      --radius-sm: calc(var(--radius) - 4px);
+      --radius-md: calc(var(--radius) - 2px);
+      --radius-lg: var(--radius);
+      --radius-xl: calc(var(--radius) + 4px);
+      --radius-2xl: calc(var(--radius) + 8px);
+      --radius-3xl: calc(var(--radius) + 12px);
     }
   `;
 
@@ -342,15 +347,6 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={downloadImage}
-            className="gap-2 text-xs border-white/10 hover:bg-white/5 hover:text-foreground"
-          >
-            <Download size={14} /> Download Photo
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={copyToClipboard}
             className="gap-2 text-xs border-white/10 hover:bg-white/5 hover:text-foreground"
           >
@@ -413,8 +409,8 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
                         
                         @layer base {
                           body { 
-                            background-color: var(--color-background); 
-                            color: var(--color-foreground);
+                            background-color: var(--background); 
+                            color: var(--foreground);
                             font-family: ui-sans-serif, system-ui, sans-serif;
                             margin: 0;
                             padding: 0;
@@ -488,4 +484,3 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
 });
 
 export default Canvas;
-

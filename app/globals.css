@@ -56,6 +56,22 @@
   animation: float 5s ease-in-out infinite;
 }
 
+@keyframes footer-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.footer-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: footer-marquee 24s linear infinite;
+}
+
 :root {
   --radius: 0.75rem;
   --background: oklch(0.14 0.01 285);

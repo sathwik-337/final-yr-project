@@ -9,6 +9,7 @@ import { UserButton } from "@clerk/nextjs";
 import { UserDetailContext } from "@/context/UserDetailContext";
 
 const PRIMARY = "var(--primary)";
+const PRIMARY_FOREGROUND = "var(--primary-foreground)";
 
 interface ProjectHeaderProps {
   projectName?: string;
@@ -67,7 +68,7 @@ function ProjectHeader({ projectName = "PixPrompt Project", onSave }: ProjectHea
 
           <Button
             className="text-white hover:scale-105 transition-all duration-300 shadow-lg shadow-primary/20"
-            style={{ background: PRIMARY }}
+            style={{ background: PRIMARY, color: PRIMARY_FOREGROUND }}
             onClick={onSave}
           >
             Save Project

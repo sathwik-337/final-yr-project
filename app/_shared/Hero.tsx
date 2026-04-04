@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Send, Sparkles, Loader } from "lucide-react";
 import { templates } from "../../data/constant";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 
 const PRIMARY = "oklch(0.3871 0.1796 289.69)";
@@ -16,6 +16,7 @@ export default function Hero() {
 
   const { user } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-grow textarea
@@ -25,6 +26,14 @@ export default function Hero() {
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [userInput]);
+
+  useEffect(() => {
+    const prompt = searchParams.get("prompt");
+
+    if (prompt) {
+      setUserInput(prompt);
+    }
+  }, [searchParams]);
 
   const onCreateProject = async () => {
     if (!user) {
@@ -187,7 +196,7 @@ export default function Hero() {
                 <div className="p-1 rounded-lg bg-white/5 group-hover:bg-indigo-500/20 transition-colors">
                   <Icon className="w-3.5 h-3.5 text-foreground/40 group-hover:text-primary" />
                 </div>
-                <span className="text-xs font-bold text-foreground/40 group-hover:text-foreground">{item.name || item.title}</span>
+                <span className="text-xs font-bold text-foreground/40 group-hover:text-foreground">{item.title}</span>
               </button>
             );
           })}

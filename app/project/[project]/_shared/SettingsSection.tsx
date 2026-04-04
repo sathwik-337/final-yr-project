@@ -8,47 +8,81 @@ import {
   Camera,
   Save,
   Palette,
+  Sparkles,
+  Wand2,
+  LayoutTemplate,
+  Wrench,
 } from "lucide-react";
 
-import { THEMES, THEME_NAME_LIST, ThemeKey } from "@/data/Themes";
+import { DEFAULT_THEME_KEY, THEMES, THEME_NAME_LIST, ThemeKey } from "@/data/Themes";
 
 const PRIMARY = "var(--primary)";
+const PRIMARY_FOREGROUND = "var(--primary-foreground)";
+
+const QUICK_ACTIONS = [
+  {
+    label: "Improve",
+    prompt:
+      "Improve the current screen. Keep the overall structure, but refine spacing, hierarchy, typography, and visual polish.",
+    icon: Sparkles,
+  },
+  {
+    label: "Redesign",
+    prompt:
+      "Redesign this screen with a stronger visual direction, better composition, and more premium UI details while keeping the same purpose.",
+    icon: Wand2,
+  },
+  {
+    label: "Add Section",
+    prompt:
+      "Add a new section to this screen that fits naturally with the existing layout and improves the user journey.",
+    icon: LayoutTemplate,
+  },
+  {
+    label: "Fix Layout",
+    prompt:
+      "Fix the layout issues on this screen. Improve spacing, alignment, responsiveness, and card structure without changing the main content.",
+    icon: Wrench,
+  },
+] as const;
+
+const PROMPT_SUGGESTIONS = [
+  "Make this screen feel more premium with stronger typography, better spacing, and layered glass cards.",
+  "Add a testimonials or social proof section with realistic names, avatars, and review stats.",
+  "Convert this into a cleaner SaaS dashboard with KPI cards, charts, and sharper information hierarchy.",
+  "Turn this into a bold landing page with a stronger hero, clearer CTA, and more visual depth.",
+  "Improve mobile responsiveness and tighten the layout so sections feel balanced on smaller screens.",
+] as const;
 
 interface ProjectSidebarProps {
   onGenerate?: (prompt: string, theme: ThemeKey) => void;
   onThemeSelect?: (theme: ThemeKey) => void;
   onSave?: (projectName: string) => void;
+  onProjectNameChange?: (projectName: string) => void;
   onScreenshot?: () => void;
   isGenerating?: boolean;
   selectedTheme?: ThemeKey;
-  initialProjectName?: string;
+  projectName?: string;
 }
 
 export default function ProjectSidebar({
   onGenerate,
   onThemeSelect,
   onSave,
+  onProjectNameChange,
   onScreenshot,
   isGenerating,
-  selectedTheme: propSelectedTheme = "NETFLIX",
-  initialProjectName = "My Screen",
+  selectedTheme: propSelectedTheme = DEFAULT_THEME_KEY,
+  projectName = "My Screen",
 }: ProjectSidebarProps) {
   /* ---------------- STATE ---------------- */
 
-  // project name
-  const [projectName, setProjectName] =
-    useState(initialProjectName);
+  const [sidebarWidth, setSidebarWidth] = useState(260);
+  const [isResizing, setIsResizing] = useState(false);
 
   // AI Prompt
   const [prompt, setPrompt] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Sync initial name if it changes
-  useEffect(() => {
-    if (initialProjectName) {
-      setProjectName(initialProjectName);
-    }
-  }, [initialProjectName]);
 
   // Auto-grow textarea
   useEffect(() => {
@@ -57,6 +91,27 @@ export default function ProjectSidebar({
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [prompt]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const nextWidth = Math.min(Math.max(event.clientX, 220), 420);
+      setSidebarWidth(nextWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
 
   /* ---------------- HANDLERS ---------------- */
 
@@ -67,8 +122,11 @@ export default function ProjectSidebar({
 
   const handleProjectNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
-    setProjectName(newName);
-    onSave?.(newName); // Proactively save on change or debounce this
+    onProjectNameChange?.(newName);
+  };
+
+  const applyPrompt = (nextPrompt: string) => {
+    setPrompt(nextPrompt);
   };
 
   /* ---------------- UI ---------------- */
@@ -76,11 +134,21 @@ export default function ProjectSidebar({
   return (
     <aside
       className="
-        w-[220px] h-full flex flex-col
+        relative h-full shrink-0 flex flex-col
         border-r border-white/10 backdrop-blur-xl
         bg-background/95
       "
+      style={{ width: `${sidebarWidth}px` }}
     >
+      <button
+        type="button"
+        aria-label="Resize sidebar"
+        onMouseDown={() => setIsResizing(true)}
+        className={`absolute top-0 right-0 z-20 h-full w-2 cursor-col-resize transition-colors ${
+          isResizing ? "bg-primary/30" : "bg-transparent hover:bg-white/10"
+        }`}
+      />
+
       {/* HEADER */}
       <div className="px-3 py-3 border-b border-white/10 flex items-center gap-2">
         <Settings size={14} className="text-primary" />
@@ -117,6 +185,29 @@ export default function ProjectSidebar({
             </p>
           </div>
 
+          <div className="space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/40">
+              Quick Actions
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {QUICK_ACTIONS.map((action) => {
+                const Icon = action.icon;
+
+                return (
+                  <button
+                    key={action.label}
+                    type="button"
+                    onClick={() => applyPrompt(action.prompt)}
+                    className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-[11px] font-semibold text-foreground/75 transition-all hover:bg-white/10 hover:text-foreground"
+                  >
+                    <Icon size={12} className="text-primary/80 shrink-0" />
+                    <span className="truncate">{action.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <textarea
             ref={textareaRef}
             value={prompt}
@@ -130,6 +221,24 @@ export default function ProjectSidebar({
             "
           />
 
+          <div className="space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/40">
+              Suggestions
+            </p>
+            <div className="space-y-2">
+              {PROMPT_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => applyPrompt(suggestion)}
+                  className="w-full rounded-lg border border-white/8 bg-background/35 px-3 py-2 text-left text-[11px] leading-relaxed text-foreground/60 transition-all hover:border-white/12 hover:bg-white/5 hover:text-foreground/80"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button
             onClick={() => onGenerate?.(prompt, propSelectedTheme)}
             disabled={isGenerating || !prompt.trim()}
@@ -140,7 +249,7 @@ export default function ProjectSidebar({
               disabled:opacity-50 disabled:cursor-not-allowed
               shadow-lg shadow-primary/20
             "
-            style={{ background: PRIMARY }}
+            style={{ background: PRIMARY, color: PRIMARY_FOREGROUND }}
           >
             {isGenerating ? "Generating..." : "Generate"}
           </button>
@@ -175,9 +284,14 @@ export default function ProjectSidebar({
                     }
                   `}
                 >
-                  <p className="text-[11px] font-medium text-foreground/80 capitalize truncate pr-2">
-                    {themeKey.toLowerCase().replace(/_/g, ' ')}
-                  </p>
+                  <div className="min-w-0 pr-2">
+                    <p className="text-[11px] font-semibold text-foreground/85 truncate">
+                      {theme.label}
+                    </p>
+                    <p className="text-[10px] text-foreground/45 truncate">
+                      {theme.description}
+                    </p>
+                  </div>
 
                   <div className="flex gap-1.5 shrink-0">
                     {[theme.primary, theme.accent, theme.secondary].map(
@@ -218,7 +332,7 @@ export default function ProjectSidebar({
             hover:scale-[1.01] active:scale-[0.98] transition
             shadow-lg shadow-primary/20
           "
-          style={{ background: PRIMARY }}
+          style={{ background: PRIMARY, color: PRIMARY_FOREGROUND }}
           onClick={() => onSave?.(projectName)}
         >
           <Save size={14} />

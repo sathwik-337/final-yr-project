@@ -55,6 +55,14 @@ OUTPUT JSON SHAPE
 AVAILABLE THEME STYLES
 ────────────────────────────────────────
 ${THEME_NAME_LIST}
+
+────────────────────────────────────────
+THEME EXECUTION RULES
+────────────────────────────────────────
+- The selected theme and palette will be provided separately in the system prompt.
+- The "theme" field in the output JSON must exactly match the selected theme key.
+- All styling notes must describe semantic theme usage such as 'bg-background', 'text-foreground', 'bg-card', 'text-card-foreground', 'bg-primary', 'text-primary-foreground', 'border-border', 'text-muted-foreground', and 'ring-ring'.
+- Avoid hardcoded color families like indigo, purple, blue, emerald, rose, zinc, slate, etc. unless the user's request explicitly asks for them.
 `
 
 export const GENERATION_SCREEN_PROMPT = `
@@ -68,6 +76,9 @@ CRITICAL OUTPUT RULES
 - NO markdown code blocks.
 - Use Lucide icons: 'lucide:icon-name' with 'stroke-width="1.5"'.
 - Use REAL-WORLD DATA & NAMES.
+- Use semantic theme tokens for color classes. Prefer 'bg-background', 'text-foreground', 'bg-card', 'text-card-foreground', 'bg-primary', 'text-primary-foreground', 'bg-secondary', 'border-border', 'text-muted-foreground', and 'ring-ring'.
+- Do NOT hardcode palette utilities like 'bg-indigo-600', 'text-purple-400', 'border-emerald-500', etc. unless explicitly requested by the user.
+- If you need a gradient or glow, derive it from CSS variables such as 'var(--primary)', 'var(--accent)', and 'var(--secondary)'.
 
 ────────────────────────────────────────
 COMPONENT ARCHITECTURE & STRUCTURE
@@ -98,7 +109,7 @@ HIGH-DESIGN SPECIFICATIONS (THE "OUTSTANDING" BAR)
    - Accents: Use 'ring-1 ring-white/20' for sharp edges.
 
 2. **ADVANCED TYPOGRAPHY**:
-   - Headings: 'font-black tracking-[-0.05em] leading-[0.9] text-transparent bg-clip-text bg-gradient-to-br from-white via-white/80 to-white/40'.
+   - Headings: 'font-black tracking-[-0.05em] leading-[0.9] text-transparent bg-clip-text'.
    - Labels: 'uppercase tracking-[0.2em] text-[10px] font-bold text-primary/80'.
    - Body: 'text-foreground/70 leading-relaxed font-medium'.
 
@@ -123,7 +134,7 @@ RESPONSIVE PRECISION
 VISUAL BLUEPRINTS (COPY THESE PATTERNS)
 ────────────────────────────────────────
 - **The Prestige Card**: 'rounded-[3.5rem] bg-gradient-to-b from-white/10 to-transparent backdrop-blur-3xl border border-white/10 p-12 shadow-2xl transition-all hover:border-white/20'.
-- **The Glow Button**: 'bg-primary text-white px-10 py-5 rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(var(--color-primary-rgb),0.5)] hover:translate-y-[-2px] active:translate-y-[0px]'.
+- **The Glow Button**: 'bg-primary text-primary-foreground px-10 py-5 rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(var(--primary-rgb),0.5)] hover:translate-y-[-2px] active:translate-y-[0px]'.
 - **The Bento Dashboard**: Use 'min-h-screen bg-background text-foreground flex flex-col md:flex-row p-4 md:p-8 gap-8'. Ensure the main content grid uses 'grid-cols-12' and children use appropriate 'col-span-X' and 'row-span-X' with 'h-full' for a solid look. Avoid naked tall containers by using 'grid-rows-[min-content]'.
 
 ────────────────────────────────────────

@@ -52,6 +52,13 @@ export default function PrivacyPage() {
               </p>
             </section>
 
+            <section id="cookies" className="space-y-4">
+              <h2 className="text-2xl font-black text-foreground">4. Cookies</h2>
+              <p>
+                We use essential cookies to keep the website functional and remember basic preferences. When enabled, analytics cookies help us understand how visitors interact with the product so we can improve the experience over time.
+              </p>
+            </section>
+
             <section className="space-y-4 p-8 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10">
                <h2 className="text-xl font-bold text-indigo-400">Questions?</h2>
                <p className="text-sm">

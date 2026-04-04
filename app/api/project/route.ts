@@ -4,6 +4,7 @@ import { db } from "@/config/db";
 import { ProjectTable, ScreenConfig, usersTable } from "@/config/schema";
 import { eq ,and} from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { resolveThemeKey } from "@/data/Themes";
 
 export async function POST(req: NextRequest) {
   try {
@@ -121,7 +122,7 @@ export async function PATCH(req: NextRequest) {
 
     // Build update object
     const updateData: any = {};
-    if (theme) updateData.theme = theme;
+    if (theme) updateData.theme = resolveThemeKey(theme);
     if (projectName) updateData.projectName = projectName;
 
     if (Object.keys(updateData).length === 0) {

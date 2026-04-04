@@ -2,6 +2,7 @@ import { groq } from "@/config/groq";
 import { geminiModel } from "@/config/gemini"; // ⭐ Re-added for safety
 import { DEEPSEEK_CONFIG } from "@/config/deepseek"; // ⭐ Official DeepSeek
 import { APP_LAYOUT_CONFIG_PROMPT } from "@/data/Prompt";
+import { buildThemePrompt, resolveThemeKey } from "@/data/Themes";
 import { db } from "@/config/db";
 import { ScreenConfig, usersTable } from "@/config/schema";
 import { NextRequest, NextResponse } from "next/server";
@@ -107,17 +108,22 @@ export async function POST(req: NextRequest) {
         console.log("DEBUG: DEEPSEEK_API_KEY prefix:", DEEPSEEK_CONFIG.apiKey.substring(0, 5) + "...");
     }
 
+    const resolvedTheme = resolveThemeKey(theme);
+    const themePrompt = buildThemePrompt(resolvedTheme);
+
     const systemPrompt =
-      APP_LAYOUT_CONFIG_PROMPT.replace("{deviceType}", deviceType).replace(
-        "{theme}",
-        theme || "AURORA_INK"
-      ) +
+      APP_LAYOUT_CONFIG_PROMPT.replace("{deviceType}", deviceType) +
       `
+      SELECTED THEME
+      ${themePrompt}
+
       CRITICAL OUTPUT RULES:
       - Output ONLY a VALID JSON object
       - NO markdown code blocks (no \`\`\`json)
       - NO preamble or postscript text
       - JSON must follow the specified structure exactly
+      - The "theme" field in the JSON must be exactly "${resolvedTheme}"
+      - Layout and styling notes must rely on semantic theme tokens instead of hardcoded color families
       `;
 
     let aiResult;

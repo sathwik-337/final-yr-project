@@ -1,130 +1,265 @@
+const BASE_THEME = {
+  popoverForeground: "",
+  cardForeground: "",
+  primaryForeground: "",
+  secondaryForeground: "",
+  accentForeground: "",
+  mutedForeground: "",
+  destructive: "",
+  input: "",
+  ring: "",
+  radius: "",
+  chart: ["", "", "", "", ""] as [string, string, string, string, string],
+};
+
 export const THEMES = {
-  /* ================= NETFLIX (Cinematic Dark) ================= */
-  NETFLIX: {
-    background: "#000000",
-    foreground: "#ffffff",
-    card: "#141414",
-    cardForeground: "#ffffff",
-    popover: "#141414",
-    popoverForeground: "#ffffff",
-    primary: "#E50914", // Netflix Red
-    primaryRgb: "229, 9, 20",
-    primaryForeground: "#ffffff",
-    secondary: "#222222",
-    secondaryForeground: "#ffffff",
-    muted: "#222222",
-    mutedForeground: "#808080",
-    accent: "#E50914",
-    accentForeground: "#ffffff",
-    destructive: "#b91c1c",
-    border: "#333333",
-    input: "#333333",
-    ring: "#E50914",
-    radius: "0.5rem",
-    chart: ["#E50914", "#ffffff", "#444444", "#808080", "#222222"],
+  AURORA_SURGE: {
+    ...BASE_THEME,
+    label: "Aurora Surge",
+    description: "Dark glass UI with electric cyan and violet highlights.",
+    background: "#08111f",
+    foreground: "#edf6ff",
+    card: "#101b2e",
+    cardForeground: "#edf6ff",
+    popover: "#101b2e",
+    popoverForeground: "#edf6ff",
+    primary: "#67e8f9",
+    primaryRgb: "103, 232, 249",
+    primaryForeground: "#06252f",
+    secondary: "#172554",
+    secondaryForeground: "#dbeafe",
+    muted: "#0f172a",
+    mutedForeground: "#93accd",
+    accent: "#8b5cf6",
+    accentForeground: "#f5f3ff",
+    destructive: "#ef4444",
+    border: "#21304c",
+    input: "#1b2a43",
+    ring: "#67e8f9",
+    radius: "1.25rem",
+    chart: ["#67e8f9", "#8b5cf6", "#22d3ee", "#38bdf8", "#c084fc"],
   },
-
-  /* ================= SPOTIFY (Music Dark) ================= */
-  SPOTIFY: {
-    background: "#121212",
-    foreground: "#ffffff",
-    card: "#181818",
-    cardForeground: "#ffffff",
-    popover: "#181818",
-    popoverForeground: "#ffffff",
-    primary: "#1DB954", // Spotify Green
-    primaryRgb: "29, 185, 84",
-    primaryForeground: "#000000",
-    secondary: "#282828",
-    secondaryForeground: "#ffffff",
-    muted: "#282828",
-    mutedForeground: "#b3b3b3",
-    accent: "#1DB954",
-    accentForeground: "#000000",
-    destructive: "#e11d48",
-    border: "#333333",
-    input: "#333333",
-    ring: "#1DB954",
-    radius: "0.75rem",
-    chart: ["#1DB954", "#ffffff", "#535353", "#b3b3b3", "#282828"],
+  EMBER_STUDIO: {
+    ...BASE_THEME,
+    label: "Ember Studio",
+    description: "Moody editorial palette with ember orange and soft amber glow.",
+    background: "#141018",
+    foreground: "#fbf4eb",
+    card: "#1d1821",
+    cardForeground: "#fbf4eb",
+    popover: "#1d1821",
+    popoverForeground: "#fbf4eb",
+    primary: "#ff7a45",
+    primaryRgb: "255, 122, 69",
+    primaryForeground: "#2f1206",
+    secondary: "#3b221d",
+    secondaryForeground: "#ffe4d4",
+    muted: "#221a20",
+    mutedForeground: "#bfa79a",
+    accent: "#f59e0b",
+    accentForeground: "#271300",
+    destructive: "#dc2626",
+    border: "#3a2a31",
+    input: "#33252c",
+    ring: "#ff7a45",
+    radius: "1.1rem",
+    chart: ["#ff7a45", "#f59e0b", "#fb7185", "#fdba74", "#fca5a5"],
   },
-
-  /* ================= CYBERPUNK (Neon Night) ================= */
-  CYBERPUNK: {
-    background: "#050505",
-    foreground: "#ffffff",
-    card: "#0f0f14",
-    cardForeground: "#ffffff",
-    popover: "#0f0f14",
-    popoverForeground: "#ffffff",
-    primary: "#f0f", // Neon Magenta
-    primaryRgb: "255, 0, 255",
-    primaryForeground: "#ffffff",
-    secondary: "#1c1c25",
-    secondaryForeground: "#ffffff",
-    muted: "#171720",
-    mutedForeground: "#0ff", // Neon Cyan
-    accent: "#0ff",
-    accentForeground: "#000000",
-    destructive: "#ff3d5a",
-    border: "#2a2a37",
-    input: "#2a394a",
-    ring: "#f0f",
-    radius: "0.25rem",
-    chart: ["#f0f", "#0ff", "#ffff00", "#ff00aa", "#00ff00"],
+  FOREST_SIGNAL: {
+    ...BASE_THEME,
+    label: "Forest Signal",
+    description: "Deep green control room aesthetic with bright botanical accents.",
+    background: "#081511",
+    foreground: "#edfdf4",
+    card: "#10211a",
+    cardForeground: "#edfdf4",
+    popover: "#10211a",
+    popoverForeground: "#edfdf4",
+    primary: "#34d399",
+    primaryRgb: "52, 211, 153",
+    primaryForeground: "#052116",
+    secondary: "#163126",
+    secondaryForeground: "#d1fae5",
+    muted: "#0d1b16",
+    mutedForeground: "#8fb6a7",
+    accent: "#a3e635",
+    accentForeground: "#162400",
+    destructive: "#ef4444",
+    border: "#234336",
+    input: "#1a352b",
+    ring: "#34d399",
+    radius: "1.15rem",
+    chart: ["#34d399", "#a3e635", "#2dd4bf", "#4ade80", "#bef264"],
   },
-
-  /* ================= OCEAN_BREEZE (Calm Blue) ================= */
-  OCEAN_BREEZE: {
-    background: "#f0f9ff", // Light blue tint
-    foreground: "#0c4a6e", // Sky 900
-    card: "#ffffff",
-    cardForeground: "#0c4a6e",
-    popover: "#ffffff",
-    popoverForeground: "#0c4a6e",
-    primary: "#0284c7", // Sky 600
-    primaryRgb: "2, 132, 199",
-    primaryForeground: "#ffffff",
-    secondary: "#e0f2fe", // Sky 100
-    secondaryForeground: "#0369a1",
-    muted: "#f0f9ff",
-    mutedForeground: "#7dd3fc",
-    accent: "#0ea5e9",
-    accentForeground: "#ffffff",
-    destructive: "#e11d48",
-    border: "#bae6fd",
-    input: "#bae6fd",
-    ring: "#0284c7",
+  PAPER_HARBOR: {
+    ...BASE_THEME,
+    label: "Paper Harbor",
+    description: "Light canvas with crisp navy structure and aqua accents.",
+    background: "#f6f2e8",
+    foreground: "#14263c",
+    card: "#fffdf8",
+    cardForeground: "#14263c",
+    popover: "#fffdf8",
+    popoverForeground: "#14263c",
+    primary: "#2563eb",
+    primaryRgb: "37, 99, 235",
+    primaryForeground: "#eff6ff",
+    secondary: "#dde7f5",
+    secondaryForeground: "#1e3a5f",
+    muted: "#ece5d8",
+    mutedForeground: "#6b7b8e",
+    accent: "#06b6d4",
+    accentForeground: "#083344",
+    destructive: "#dc2626",
+    border: "#d7d2c4",
+    input: "#d7d2c4",
+    ring: "#2563eb",
     radius: "1rem",
-    chart: ["#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc", "#bae6fd"],
+    chart: ["#2563eb", "#06b6d4", "#0f766e", "#60a5fa", "#38bdf8"],
   },
-
-  /* ================= ROSE_GOLD (Elegant) ================= */
-  ROSE_GOLD: {
-    background: "#fffafb",
-    foreground: "#431407", // Warm Brown
-    card: "#ffffff",
-    cardForeground: "#431407",
-    popover: "#ffffff",
-    popoverForeground: "#431407",
-    primary: "#e11d48", // Rose 600
-    primaryRgb: "225, 29, 72",
-    primaryForeground: "#ffffff",
-    secondary: "#fff1f2", // Rose 50
-    secondaryForeground: "#9f1239",
-    muted: "#fff1f2",
-    mutedForeground: "#fda4af",
-    accent: "#fb7185",
-    accentForeground: "#ffffff",
-    destructive: "#be123c",
-    border: "#fecdd3",
-    input: "#fecdd3",
-    ring: "#e11d48",
-    radius: "1.5rem",
-    chart: ["#e11d48", "#fb7185", "#fda4af", "#fecdd3", "#fff1f2"],
+  NOIR_GILT: {
+    ...BASE_THEME,
+    label: "Noir Gilt",
+    description: "Dark luxury interface with brass highlights and rich neutrals.",
+    background: "#0d0b0f",
+    foreground: "#f8f1e6",
+    card: "#171319",
+    cardForeground: "#f8f1e6",
+    popover: "#171319",
+    popoverForeground: "#f8f1e6",
+    primary: "#d4a24c",
+    primaryRgb: "212, 162, 76",
+    primaryForeground: "#24170a",
+    secondary: "#2a1e16",
+    secondaryForeground: "#f6e7cd",
+    muted: "#1a1519",
+    mutedForeground: "#b6a48f",
+    accent: "#f97316",
+    accentForeground: "#2b1204",
+    destructive: "#ef4444",
+    border: "#372921",
+    input: "#2b211b",
+    ring: "#d4a24c",
+    radius: "1.3rem",
+    chart: ["#d4a24c", "#f97316", "#fbbf24", "#facc15", "#fdba74"],
   },
 } as const;
 
 export type ThemeKey = keyof typeof THEMES;
-export const THEME_NAME_LIST = Object.keys(THEMES) as ThemeKey[];
 export type Theme = (typeof THEMES)[ThemeKey];
+
+const LEGACY_THEME_ALIASES = {
+  NETFLIX: "NOIR_GILT",
+  SPOTIFY: "FOREST_SIGNAL",
+  CYBERPUNK: "AURORA_SURGE",
+  OCEAN_BREEZE: "PAPER_HARBOR",
+  ROSE_GOLD: "EMBER_STUDIO",
+} as const;
+
+export const DEFAULT_THEME_KEY: ThemeKey = "AURORA_SURGE";
+export const THEME_NAME_LIST = Object.keys(THEMES) as ThemeKey[];
+
+export function resolveThemeKey(theme?: string | null): ThemeKey {
+  if (theme && theme in THEMES) {
+    return theme as ThemeKey;
+  }
+
+  if (theme && theme in LEGACY_THEME_ALIASES) {
+    return LEGACY_THEME_ALIASES[theme as keyof typeof LEGACY_THEME_ALIASES];
+  }
+
+  return DEFAULT_THEME_KEY;
+}
+
+export function getThemeByKey(theme?: string | null): Theme {
+  return THEMES[resolveThemeKey(theme)];
+}
+
+export function getThemeLabel(theme?: string | null): string {
+  return getThemeByKey(theme).label;
+}
+
+export function buildThemePrompt(theme?: string | null): string {
+  const key = resolveThemeKey(theme);
+  const palette = THEMES[key];
+
+  return [
+    `Selected Theme Key: ${key}`,
+    `Selected Theme Label: ${palette.label}`,
+    `Theme Intent: ${palette.description}`,
+    "Palette Tokens:",
+    `- background: ${palette.background}`,
+    `- foreground: ${palette.foreground}`,
+    `- card: ${palette.card}`,
+    `- primary: ${palette.primary}`,
+    `- secondary: ${palette.secondary}`,
+    `- accent: ${palette.accent}`,
+    `- border: ${palette.border}`,
+    `- muted: ${palette.muted}`,
+    `- ring: ${palette.ring}`,
+    `- radius: ${palette.radius}`,
+  ].join("\n");
+}
+
+export function buildThemeCssVariables(theme?: string | null): Record<string, string> {
+  const palette = getThemeByKey(theme);
+
+  return {
+    "--background": palette.background,
+    "--foreground": palette.foreground,
+    "--card": palette.card,
+    "--card-foreground": palette.cardForeground,
+    "--popover": palette.popover,
+    "--popover-foreground": palette.popoverForeground,
+    "--primary": palette.primary,
+    "--primary-rgb": palette.primaryRgb,
+    "--primary-muted": `${palette.primary}26`,
+    "--primary-foreground": palette.primaryForeground,
+    "--secondary": palette.secondary,
+    "--secondary-foreground": palette.secondaryForeground,
+    "--muted": palette.muted,
+    "--muted-foreground": palette.mutedForeground,
+    "--accent": palette.accent,
+    "--accent-muted": `${palette.accent}26`,
+    "--accent-foreground": palette.accentForeground,
+    "--destructive": palette.destructive,
+    "--border": palette.border,
+    "--input": palette.input,
+    "--ring": palette.ring,
+    "--radius": palette.radius,
+    "--chart-1": palette.chart[0],
+    "--chart-2": palette.chart[1],
+    "--chart-3": palette.chart[2],
+    "--chart-4": palette.chart[3],
+    "--chart-5": palette.chart[4],
+    "--sidebar": palette.card,
+    "--sidebar-foreground": palette.cardForeground,
+    "--sidebar-primary": palette.primary,
+    "--sidebar-primary-foreground": palette.primaryForeground,
+    "--sidebar-accent": palette.secondary,
+    "--sidebar-accent-foreground": palette.secondaryForeground,
+    "--sidebar-border": palette.border,
+    "--sidebar-ring": palette.ring,
+    "--color-background": palette.background,
+    "--color-foreground": palette.foreground,
+    "--color-card": palette.card,
+    "--color-card-foreground": palette.cardForeground,
+    "--color-popover": palette.popover,
+    "--color-popover-foreground": palette.popoverForeground,
+    "--color-primary": palette.primary,
+    "--color-primary-rgb": palette.primaryRgb,
+    "--color-primary-muted": `${palette.primary}26`,
+    "--color-primary-foreground": palette.primaryForeground,
+    "--color-secondary": palette.secondary,
+    "--color-secondary-foreground": palette.secondaryForeground,
+    "--color-muted": palette.muted,
+    "--color-muted-foreground": palette.mutedForeground,
+    "--color-accent": palette.accent,
+    "--color-accent-muted": `${palette.accent}26`,
+    "--color-accent-foreground": palette.accentForeground,
+    "--color-destructive": palette.destructive,
+    "--color-border": palette.border,
+    "--color-input": palette.input,
+    "--color-ring": palette.ring,
+  };
+}

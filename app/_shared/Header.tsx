@@ -49,8 +49,8 @@ function Header() {
           <ul className="flex gap-8 items-center text-sm font-semibold text-foreground/70">
             {[
               { name: "Home", path: "/" },
-              { name: "About", path: "/about" },
-              { name: "Pricing", path: "/pricing" }
+              { name: "Templates", path: "/templates" },
+              { name: "About", path: "/about" }
             ].map((item) => (
               <li 
                 key={item.name} 
@@ -118,8 +118,8 @@ function Header() {
           <ul className="flex flex-col items-center gap-6 py-8">
             {[
               { name: "Home", path: "/" },
-              { name: "About", path: "/about" },
-              { name: "Pricing", path: "/pricing" }
+              { name: "Templates", path: "/templates" },
+              { name: "About", path: "/about" }
             ].map((item) => (
               <li
                 key={item.name}
