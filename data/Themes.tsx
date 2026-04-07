@@ -263,3 +263,41 @@ export function buildThemeCssVariables(theme?: string | null): Record<string, st
     "--color-ring": palette.ring,
   };
 }
+
+export const TAILWIND_THEME_INLINE_CSS = `@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+}`;
+
+export function buildThemeCssVariableBlock(
+  theme?: string | null,
+  selector = ":root"
+): string {
+  const declarations = Object.entries(buildThemeCssVariables(theme))
+    .map(([token, value]) => `  ${token}: ${value};`)
+    .join("\n");
+
+  return `${selector} {\n${declarations}\n}`;
+}

@@ -7,7 +7,15 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { toPng } from "html-to-image";
 
-import { buildThemeCssVariables, DEFAULT_THEME_KEY, getThemeByKey, type ThemeKey } from "@/data/Themes";
+import {
+  buildThemeCssVariableBlock,
+  buildThemeCssVariables,
+  DEFAULT_THEME_KEY,
+  getThemeByKey,
+  TAILWIND_THEME_INLINE_CSS,
+  type ThemeKey,
+} from "@/data/Themes";
+import { parseScreenCodePayload } from "@/lib/screen-code";
 
 interface CanvasProps {
   screens: ScreenConfig[];
@@ -34,6 +42,12 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
   const previewDevice = deviceType === "mobile" ? "mobile" : "desktop";
 
   const currentScreen = screens[selectedScreenIndex];
+  const currentScreenCode = parseScreenCodePayload(currentScreen?.code);
+  const hasBrokenStructuredPayload =
+    currentScreenCode.isStructured &&
+    !currentScreenCode.html.trim() &&
+    !currentScreenCode.css.trim() &&
+    !!currentScreenCode.parsedObject;
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
@@ -66,47 +80,25 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
     }
   }, [previewDevice, viewMode, selectedScreenIndex]);
 
-  // ⭐ Extract HTML from potential JSON schema
-  let finalHtmlCode = currentScreen?.code || "";
-  try {
-    if (finalHtmlCode.trim().startsWith('{')) {
-      const parsed = JSON.parse(finalHtmlCode);
-      if (parsed.code) {
-        finalHtmlCode = parsed.code;
-      } else if (parsed.html) {
-        finalHtmlCode = parsed.html;
-      } else if (typeof parsed === 'object') {
-        // If it's valid JSON but has no code field, it's a failed generation
-        finalHtmlCode = `<div class="flex flex-col items-center justify-center h-full p-10 text-center bg-slate-900 text-white">
-          <div class="bg-red-500/20 p-4 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-          <h2 class="text-xl font-bold mb-2">Generation Failed</h2>
-          <p class="text-slate-400 max-w-md">The AI returned a metadata response instead of actual code. This usually happens when the request is too complex. Please try regenerating this screen.</p>
-          <button onclick="window.parent.postMessage('regenerate', '*')" class="mt-6 px-6 py-2 bg-primary rounded-full font-medium">Try Again</button>
-        </div>`;
-      }
-    }
-  } catch (e) {
-    // Not JSON or parse failed, use raw code
+  let finalHtmlCode = currentScreenCode.html;
+  if (hasBrokenStructuredPayload) {
+    finalHtmlCode = `<div class="flex flex-col items-center justify-center h-full p-10 text-center bg-slate-900 text-white">
+      <div class="bg-red-500/20 p-4 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h2 class="text-xl font-bold mb-2">Generation Failed</h2>
+      <p class="text-slate-400 max-w-md">The AI returned a metadata response instead of actual code. This usually happens when the request is too complex. Please try regenerating this screen.</p>
+      <button onclick="window.parent.postMessage('regenerate', '*')" class="mt-6 px-6 py-2 bg-primary rounded-full font-medium">Try Again</button>
+    </div>`;
   }
+  const finalCssCode = currentScreenCode.css;
 
   // Use the selected theme with a canonical fallback
   const theme = getThemeByKey(selectedTheme);
 
   // Simple HTML Formatter
   const formatHTML = (html: string) => {
-    let rawHtml = html;
-    try {
-      // If it's a JSON string with a code field, extract the code
-      const parsed = JSON.parse(html);
-      if (parsed.code) rawHtml = parsed.code;
-      else if (parsed.html) rawHtml = parsed.html;
-    } catch (e) {
-      // Not JSON, continue with raw HTML
-    }
-    
     let formatted = "";
     let indent = 0;
-    rawHtml.split(/>\s*</).forEach((element) => {
+    html.split(/>\s*</).forEach((element) => {
       if (element.match(/^\/\w/)) {
         indent--;
       }
@@ -122,6 +114,19 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
     return formatted.trim();
   };
 
+  const formatCSS = (css: string) => {
+    const trimmed = css.trim();
+    return trimmed || "/* No custom CSS generated */";
+  };
+
+  const indentBlock = (value: string, spaces = 2) => {
+    const prefix = " ".repeat(spaces);
+    return value
+      .split("\n")
+      .map((line) => (line.trim() ? `${prefix}${line}` : line))
+      .join("\n");
+  };
+
   const iframeCssVariables = Object.entries(buildThemeCssVariables(selectedTheme))
     .map(([token, value]) => `      ${token}: ${value};`)
     .join("\n");
@@ -131,50 +136,52 @@ const Canvas = forwardRef((props: CanvasProps, ref) => {
 ${iframeCssVariables}
     }
 
-    @theme inline {
-      --color-background: var(--background);
-      --color-foreground: var(--foreground);
-      --color-card: var(--card);
-      --color-card-foreground: var(--card-foreground);
-      --color-popover: var(--popover);
-      --color-popover-foreground: var(--popover-foreground);
-      --color-primary: var(--primary);
-      --color-primary-foreground: var(--primary-foreground);
-      --color-secondary: var(--secondary);
-      --color-secondary-foreground: var(--secondary-foreground);
-      --color-muted: var(--muted);
-      --color-muted-foreground: var(--muted-foreground);
-      --color-accent: var(--accent);
-      --color-accent-foreground: var(--accent-foreground);
-      --color-destructive: var(--destructive);
-      --color-border: var(--border);
-      --color-input: var(--input);
-      --color-ring: var(--ring);
-      --radius-sm: calc(var(--radius) - 4px);
-      --radius-md: calc(var(--radius) - 2px);
-      --radius-lg: var(--radius);
-      --radius-xl: calc(var(--radius) + 4px);
-      --radius-2xl: calc(var(--radius) + 8px);
-      --radius-3xl: calc(var(--radius) + 12px);
-    }
+    ${TAILWIND_THEME_INLINE_CSS}
   `;
+
+  const previewCanvasThemeStyle = buildThemeCssVariables(selectedTheme);
+
+  const buildClipboardExport = () => {
+    const htmlBlock = currentScreenCode.html.trim();
+    const cssBlock = currentScreenCode.css.trim();
+
+    if (!htmlBlock) {
+      return currentScreen?.code || "";
+    }
+
+    const formattedHtmlBlock = formatHTML(htmlBlock);
+    const formattedCustomCss = cssBlock ? formatCSS(cssBlock) : "";
+
+    const exportBaseCss = [
+      buildThemeCssVariableBlock(selectedTheme, ".pixprompt-theme"),
+      "",
+      ".pixprompt-theme {",
+      "  background-color: var(--background);",
+      "  color: var(--foreground);",
+      "}",
+    ].join("\n");
+
+    const exportBlocks = [
+      `<style>\n${exportBaseCss}${formattedCustomCss ? `\n\n${formattedCustomCss}` : ""}\n</style>`,
+    ];
+
+    exportBlocks.push(`<style type="text/tailwindcss">\n${TAILWIND_THEME_INLINE_CSS}\n</style>`);
+
+    exportBlocks.push([
+      `<div class="pixprompt-theme">`,
+      indentBlock(formattedHtmlBlock),
+      `</div>`,
+    ].join("\n"));
+
+    return exportBlocks.join("\n\n");
+  };
 
   const copyToClipboard = () => {
     if (currentScreen?.code) {
-      // If it's a JSON string, extract the code
-      let codeToCopy = currentScreen.code;
-      try {
-        if (codeToCopy.trim().startsWith('{')) {
-          const parsed = JSON.parse(codeToCopy);
-          if (parsed.code) codeToCopy = parsed.code;
-          else if (parsed.html) codeToCopy = parsed.html;
-        }
-      } catch (e) {
-        // Not JSON or parse failed, use raw code
-      }
-      
+      const codeToCopy = buildClipboardExport();
+
       navigator.clipboard.writeText(codeToCopy);
-      toast.success("Code copied to clipboard!");
+      toast.success("Theme-aware code copied to clipboard!");
     }
   };
 
@@ -358,7 +365,10 @@ ${iframeCssVariables}
       {/* CONTENT AREA */}
       <div className="flex-1 overflow-hidden relative" ref={containerRef}>
         {viewMode === "preview" ? (
-          <div className="w-full h-full flex items-center justify-center p-2 md:p-4 bg-[radial-gradient(circle_at_center,var(--primary-muted)_0%,transparent_100%)] overflow-auto scrollbar-hide">
+          <div
+            className="w-full h-full flex items-center justify-center p-2 md:p-4 bg-[radial-gradient(circle_at_center,var(--primary-muted)_0%,transparent_100%)] overflow-auto scrollbar-hide"
+            style={previewCanvasThemeStyle}
+          >
             <div
               className={`
                 preview-container bg-background shadow-2xl transition-all duration-500 overflow-hidden
@@ -460,6 +470,9 @@ ${iframeCssVariables}
                         /* Hide scrollbar */
                         ::-webkit-scrollbar { display: none; }
                       </style>
+                      <style>
+                        ${finalCssCode}
+                      </style>
                     </head>
                     <body>
                       ${finalHtmlCode}
@@ -471,11 +484,29 @@ ${iframeCssVariables}
           </div>
         ) : (
           <div className="w-full h-full bg-[#0d1117] overflow-auto p-6 font-mono text-sm leading-relaxed scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-            <pre className="text-gray-300">
-              <code className="language-html">
-                {formatHTML(currentScreen?.code || "")}
-              </code>
-            </pre>
+            <div className="space-y-6">
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">HTML</h3>
+                </div>
+                <pre className="text-gray-300 whitespace-pre-wrap">
+                  <code className="language-html">
+                    {formatHTML(currentScreenCode.html || currentScreen?.code || "")}
+                  </code>
+                </pre>
+              </section>
+
+              <section className="space-y-3 border-t border-white/10 pt-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">CSS</h3>
+                </div>
+                <pre className="text-gray-300 whitespace-pre-wrap">
+                  <code className="language-css">
+                    {formatCSS(currentScreenCode.css)}
+                  </code>
+                </pre>
+              </section>
+            </div>
           </div>
         )}
       </div>

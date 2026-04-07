@@ -7,7 +7,7 @@ import Canvas from './_shared/Canvas';
 import axios from 'axios';
 import { useParams } from 'next/navigation';
 import { ProjectType, ScreenConfig } from '@/type/types';
-import { buildThemeCssVariables, DEFAULT_THEME_KEY, resolveThemeKey, type ThemeKey } from '@/data/Themes';
+import { DEFAULT_THEME_KEY, resolveThemeKey, type ThemeKey } from '@/data/Themes';
 import { Loader2Icon } from 'lucide-react';
 import { UserDetailContext } from '@/context/UserDetailContext';
 import { toast } from 'sonner';
@@ -312,10 +312,8 @@ function ProjectCanvasPlayground() {
     );
   }
 
-  const projectThemeStyle = buildThemeCssVariables(selectedTheme);
-
   return (
-    <div className="h-screen flex flex-col bg-background" style={projectThemeStyle}>
+    <div className="h-screen flex flex-col bg-background">
       <ProjectHeader 
         projectName={projectName} 
         onSave={() => handleSaveProject()} 

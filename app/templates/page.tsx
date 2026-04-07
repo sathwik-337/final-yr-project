@@ -133,6 +133,157 @@ function TemplatePreview({ slug }: { slug: string }) {
     );
   }
 
+  if (slug === "analytics-stats") {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-[1.5rem] border border-white/10 bg-white/[0.04] px-4 py-3">
+          <div className="space-y-2">
+            <div className="h-3 w-20 rounded-full bg-white/70" />
+            <div className="h-2.5 w-28 rounded-full bg-white/20" />
+          </div>
+          <div className="h-8 w-16 rounded-full bg-white/10" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[0, 1, 2, 3].map((item) => (
+            <div key={item} className="rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="h-2.5 w-16 rounded-full bg-white/60" />
+                <div className="h-5 w-10 rounded-full bg-emerald-400/20" />
+              </div>
+              <div className="mb-2 h-6 w-20 rounded-full bg-white/85" />
+              <div className="h-10 rounded-2xl bg-gradient-to-r from-indigo-500/20 to-cyan-400/10" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (slug === "testimonials-section") {
+    return (
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.04] p-4">
+          <div className="mb-3 h-3 w-20 rounded-full bg-white/70" />
+          <div className="mb-2 h-2.5 rounded-full bg-white/20" />
+          <div className="mb-2 h-2.5 w-5/6 rounded-full bg-white/15" />
+          <div className="mb-4 h-2.5 w-2/3 rounded-full bg-white/10" />
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-400/50 to-pink-400/30" />
+            <div className="space-y-2">
+              <div className="h-2.5 w-16 rounded-full bg-white/70" />
+              <div className="h-2 w-20 rounded-full bg-white/20" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-[1.6rem] border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-4">
+          <div className="mb-3 flex gap-1">
+            {[0, 1, 2, 3, 4].map((star) => (
+              <div key={star} className="h-3 w-3 rounded-full bg-amber-300/70" />
+            ))}
+          </div>
+          <div className="mb-2 h-2.5 rounded-full bg-white/20" />
+          <div className="mb-2 h-2.5 w-11/12 rounded-full bg-white/15" />
+          <div className="mb-5 h-2.5 w-4/5 rounded-full bg-white/10" />
+          <div className="h-16 rounded-[1.2rem] bg-indigo-500/15" />
+        </div>
+      </div>
+    );
+  }
+
+  if (slug === "faq-accordion") {
+    return (
+      <div className="space-y-3">
+        {[0, 1, 2].map((item) => (
+          <div key={item} className="rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4">
+            <div className="flex items-center justify-between">
+              <div className="h-3 w-40 rounded-full bg-white/75" />
+              <div className="h-7 w-7 rounded-full bg-white/10" />
+            </div>
+            {item === 0 && (
+              <div className="mt-4 space-y-2">
+                <div className="h-2.5 rounded-full bg-white/20" />
+                <div className="h-2.5 w-5/6 rounded-full bg-white/15" />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (slug === "contact-section") {
+    return (
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.04] p-4">
+          <div className="mb-4 h-3 w-24 rounded-full bg-white/75" />
+          <div className="space-y-3">
+            <div className="h-10 rounded-2xl bg-white/10" />
+            <div className="h-10 rounded-2xl bg-white/10" />
+            <div className="h-16 rounded-[1.2rem] bg-white/10" />
+            <div className="h-10 rounded-2xl bg-gradient-to-r from-indigo-500 to-fuchsia-500" />
+          </div>
+        </div>
+        <div className="rounded-[1.6rem] border border-white/10 bg-gradient-to-br from-indigo-500/15 via-transparent to-cyan-400/10 p-4">
+          <div className="mb-4 h-3 w-20 rounded-full bg-white/80" />
+          <div className="space-y-3">
+            <div className="h-12 rounded-[1.1rem] bg-black/20" />
+            <div className="h-12 rounded-[1.1rem] bg-black/20" />
+            <div className="h-20 rounded-[1.25rem] bg-black/15" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (slug === "dashboard-header") {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-[1.6rem] border border-white/10 bg-white/[0.04] px-4 py-3">
+          <div className="space-y-2">
+            <div className="h-2.5 w-16 rounded-full bg-white/20" />
+            <div className="h-4 w-28 rounded-full bg-white/80" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-24 rounded-2xl bg-white/10" />
+            <div className="h-9 w-9 rounded-full bg-white/10" />
+            <div className="h-9 w-9 rounded-full bg-indigo-500/30" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="col-span-2 h-20 rounded-[1.5rem] border border-white/10 bg-white/[0.04]" />
+          <div className="h-20 rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/10" />
+        </div>
+      </div>
+    );
+  }
+
+  if (slug === "kanban-board") {
+    return (
+      <div className="grid grid-cols-3 gap-3">
+        {[0, 1, 2].map((column) => (
+          <div key={column} className="rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-3">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="h-3 w-16 rounded-full bg-white/70" />
+              <div className="h-5 w-5 rounded-full bg-white/10" />
+            </div>
+            <div className="space-y-2">
+              {[0, 1].map((card) => (
+                <div key={card} className="rounded-[1rem] bg-black/20 p-2.5">
+                  <div className="mb-2 h-2.5 w-4/5 rounded-full bg-white/70" />
+                  <div className="mb-3 h-2 w-2/3 rounded-full bg-white/15" />
+                  <div className="flex items-center justify-between">
+                    <div className="h-5 w-10 rounded-full bg-indigo-500/20" />
+                    <div className="h-6 w-6 rounded-full bg-white/10" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid min-h-[220px] gap-3 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4">
       <div className="grid grid-cols-2 gap-3">

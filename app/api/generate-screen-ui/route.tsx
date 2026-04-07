@@ -8,6 +8,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { buildThemePrompt, resolveThemeKey } from "@/data/Themes";
+import { formatExistingScreenCodeForPrompt, serializeScreenCodePayload } from "@/lib/screen-code";
 
 /* =====================================================
    SAFE JSON PARSER (handles bad AI outputs)
@@ -37,7 +38,7 @@ function safeParseJSON(text: string) {
         } catch {
           // If all JSON parsing fails, but we have text, return it as code
           console.warn("Regex JSON match failed to parse. Returning raw text as code.");
-          return { code: text };
+          return { code: text, css: "" };
         }
       }
       
@@ -123,7 +124,8 @@ Theme Usage Rules:
 `;
 
     if (existingCode) {
-      userInput += `\n\nEXISTING CODE TO MODIFY:\n${existingCode}\n\nUSER REQUEST: ${screenDescription}`;
+      const existingScreenCode = formatExistingScreenCodeForPrompt(existingCode);
+      userInput += `\n\nEXISTING SCREEN TO MODIFY:\n${existingScreenCode || existingCode}\n\nUSER REQUEST: ${screenDescription}`;
     }
 
     /* ---------- AI CALL ---------- */
@@ -136,7 +138,7 @@ Theme Usage Rules:
 
     const systemPrompt =
       GENERATION_SCREEN_PROMPT +
-      "\n\nIMPORTANT: Respond ONLY in valid JSON format. NO markdown code blocks (no ```json). The 'code' field must be a string containing the FULL HTML/Tailwind CSS code.";
+      "\n\nIMPORTANT: Respond ONLY in valid JSON format. NO markdown code blocks (no ```json). The 'code' field must contain the full HTML markup. The 'css' field must contain any supporting plain CSS rules.";
 
     let aiResult;
     try {
@@ -226,22 +228,23 @@ Theme Usage Rules:
       parsed = safeParseJSON(aiResult);
     } catch {
       console.warn("AI returned non-JSON. Saving raw output.");
-      parsed = { code: aiResult };
+      parsed = { code: aiResult, css: "" };
     }
 
-    // ⭐ Better fallback logic: ensure we actually have code
-    let code: string = parsed.code || parsed.html || "";
+    let html: string = parsed.code || parsed.html || "";
+    let css: string = parsed.css || "";
     
-    // If parsed.code exists but is null/empty, or if it doesn't exist at all
-    if (!code && typeof aiResult === 'string' && aiResult.length > 50) {
+    if (!html && typeof aiResult === 'string' && aiResult.length > 50) {
         // If we have a long string but no 'code' field, the whole string might be the code
         // Or it might be the JSON that we failed to extract from
-        code = aiResult;
+        html = aiResult;
     }
 
-    if (!code) {
+    if (!html) {
         throw new Error("AI failed to generate any code in the response");
     }
+
+    const code = serializeScreenCodePayload({ html, css });
 
     /* ---------- DB UPDATE ---------- */
 
